@@ -7,13 +7,13 @@ import Home from "../pages/public/Home";
 import Login from "../pages/public/Login";
 
 import Dashboard from "../pages/private/Dashboard";
-import Clientes from "../pages/private/clientes/Clientes";
-import Reservas from "../pages/private/reservas/Reservas";
-import Calendario from "../pages/private/Calendario";
-import Servicios from "../pages/private/servicios/Servicios";
-import Reportes from "../pages/private/reportes/Reportes";
+import Clientes from "../pages/private/Clientes";
+import Reservas from "../pages/private/Reservas";
+import Servicios from "../pages/private/Servicios";
+import Reportes from "../pages/private/Reportes";
 import AsistenteIA from "../pages/private/AsistenteIA";
 import Configuracion from "../pages/private/Configuracion";
+import Calendario from "../pages/private/Calendario";
 
 function AppRouter() {
   return (
