@@ -1,3 +1,5 @@
+// services/reservasService.js
+
 import api from "./api";
 
 const getTenantId = () =>
@@ -13,7 +15,7 @@ export const reservasService = {
   async crear(data) {
     const payload = {
       ...data,
-      tenant_id: localStorage.getItem("tenanr_id"),
+      tenant_id: getTenantId(),
     };
 
     const res = await api.post("/reservas/", payload);

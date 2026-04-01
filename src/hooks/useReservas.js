@@ -13,9 +13,18 @@ export const useReservas = () => {
     }
   };
 
+  const cancelarReserva = async (id) => {
+    await reservasService.cancelar(id);
+    cargarReservas();
+  };
+
   useEffect(() => {
     cargarReservas();
   }, []);
 
-  return { reservas };
+  return {
+    reservas,
+    cargarReservas,
+    cancelarReserva,
+  };
 };

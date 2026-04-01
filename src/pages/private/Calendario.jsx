@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { reservasService }from "../../services/reservasService";
+import { useState, useMemo, useEffect } from "react";
+
 
 const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MESES = [
@@ -273,10 +275,30 @@ function VistaAgenda({ year, month, eventos }) {
 export default function Calendario() {
   const [view, setView] = useState("month");
   const [current, setCurrent] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
-  const [eventos, setEventos] = useState([
-    { title: "Reserva Daniel", start: new Date(2026, 2, 26, 14, 0), end: new Date(2026, 2, 26, 15, 0) },
-  ]);
+  const [eventos, setEventos] = useState([]);
   const [modalSlot, setModalSlot] = useState(null);
+
+  useEffect(() => {
+    cargarReservas();
+  },  []);
+
+  const cargarReservas = async () => {
+  try {
+    const data = await reservasService.listar();
+
+    const eventosTransformados = data.map((r) => ({
+      title: `${r.cliente?.nombre_completo || "Sin cliente"} - ${r.activo?.nombre || "Activo"}`,
+      start: new Date(r.fecha_inicio),
+      end: new Date(r.fecha_fin),
+      raw: r, 
+    }));
+
+    setEventos(eventosTransformados);
+
+  } catch (error) {
+    console.error("Error cargando reservas:", error);
+  }
+};
 
   const year = current.getFullYear();
   const month = current.getMonth();

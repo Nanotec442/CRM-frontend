@@ -16,8 +16,20 @@ function Clientes() {
       setLoading(true);
       setError(null);
       const data = await clientesService.listar();
-      // La API puede devolver lista directa o { clientes: [...] }
-      setClientes(Array.isArray(data) ? data : data.clientes ?? []);
+
+      const raw = Array.isArray(data) ? data : data.clientes ?? [];
+
+      const mapped = raw.map((c) => ({
+        id: c.id ?? c.cliente_id,
+        nombre: c.nombre_completo, // 🔥 clave
+        email: c.email,
+        telefono: c.telefono,
+        empresa: c.empresa,
+        notas: c.notas,
+        estado: c.estado,
+      }));
+
+      setClientes(mapped);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,13 +50,34 @@ function Clientes() {
       setClientes((prev) =>
         prev.map((c) =>
           (c.id ?? c.cliente_id) === (clienteEditando.id ?? clienteEditando.cliente_id)
-            ? actualizado
+            ? {
+    id: actualizado.id,
+    nombre: actualizado.nombre_completo,
+    email: actualizado.email,
+    telefono: actualizado.telefono,
+    empresa: actualizado.empresa,
+    notas: actualizado.notas,
+    estado: actualizado.estado,
+  }
             : c
         )
       );
       setClienteEditando(null);
     } else {
       const nuevo = await clientesService.crear(formData);
+
+const mapped = {
+  id: nuevo.id,
+  nombre: nuevo.nombre_completo,
+  email: nuevo.email,
+  telefono: nuevo.telefono,
+  empresa: nuevo.empresa,
+  notas: nuevo.notas,
+  estado: nuevo.estado,
+};
+
+setClientes((prev) => [mapped, ...prev]);
+
       setClientes((prev) => [nuevo, ...prev]);
     }
     setFormVisible(false);

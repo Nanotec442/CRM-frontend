@@ -42,4 +42,9 @@ export const clientesService = {
     const res = await api.get(`/crm/clientes/${clienteId}`);
     return res.data;
   },
+
+  async eliminar(clienteId) {
+  const res = await api.delete(`/crm/clientes/${clienteId}`);
+  return res.data;
+}
 };
