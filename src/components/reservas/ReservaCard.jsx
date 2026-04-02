@@ -67,7 +67,7 @@ const ReservaCard = ({ reserva, onCancelar, onFirmar }) => {
           onClick={() => onFirmar?.(reserva)}
           style={btnPrimary}
         >
-          ✍️ Firmar
+           Firmar
         </button>
 
         <button

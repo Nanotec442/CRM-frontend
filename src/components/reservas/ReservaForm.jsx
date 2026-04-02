@@ -70,7 +70,7 @@ const ReservaForm = ({ onSuccess }) => {
 
       await reservasService.crear(payload);
 
-      alert("Reserva creada 🚀");
+      alert("Reserva creada ");
 
       setForm({
         cliente_id: "",
@@ -98,7 +98,7 @@ const ReservaForm = ({ onSuccess }) => {
       }}
     >
       <h2 style={{ marginBottom: "15px", fontWeight: "600" }}>
-        🧾 Nueva Reserva
+         Nueva Reserva
       </h2>
 
       {/* CLIENTE */}

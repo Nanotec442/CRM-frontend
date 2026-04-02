@@ -35,10 +35,7 @@ function Dashboard() {
       description: "Consulta reservas activas y pendientes.",
       path:"/panel/reservas"
     },
-    { title: "Revisar calendario",
-      description: "Visualiza disponibilidad y agenda.",
-      path:"/panel/calendario"
-    },
+
     { title: "Usar Asistente IA",
       description: "Obtén apoyo inteligente en tareas del CRM.",
       path:"/panel/asistente-ia"},

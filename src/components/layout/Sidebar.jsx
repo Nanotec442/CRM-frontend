@@ -51,15 +51,6 @@ function Sidebar() {
         </NavLink>
 
         <NavLink
-          to="/panel/calendario"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Calendario
-        </NavLink>
-
-        <NavLink
           to="/panel/servicios"
           className={({ isActive }) =>
             `${linkBase} ${isActive ? linkActive : linkInactive}`
