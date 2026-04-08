@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
-import {login} from "../../services/authService"
+import { login } from "../../services/authService";
 
 function Login() {
   const navigate = useNavigate();
@@ -22,30 +22,48 @@ function Login() {
     }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  try {
-    const data = await login(formData.email, formData.password);
+    try {
+      console.log("Intentando login...");
 
-    // guardamos token
-    localStorage.setItem("token", data.access_token);
+      const data = await login(formData.email, formData.password);
 
-    // opcional: marcar auth
-    localStorage.setItem("isAuth", "true");
+      console.log("RESPUESTA LOGIN:", data);
 
-    navigate("/panel");
-  } catch (err) {
-    console.error(err);
+      localStorage.setItem("token", data.access_token);
 
-    if (err.response?.status === 401) {
-      setError("Credenciales incorrectas");
-    } else {
-      setError("Error del servidor");
+      if (data.tenant_id) {
+        localStorage.setItem("tenant_id", data.tenant_id);
+      } else {
+        console.warn("tenant_id no vino en response, intentando desde token...");
+
+        const payload = JSON.parse(atob(data.access_token.split(".")[1]));
+        console.log("🔍 PAYLOAD TOKEN:", payload);
+
+        if (payload.tenant_id) {
+          localStorage.setItem("tenant_id", payload.tenant_id);
+        } else {
+          throw new Error("No se pudo obtener tenant_id");
+        }
+      }
+
+      localStorage.setItem("isAuth", "true");
+
+      navigate("/panel");
+
+    } catch (err) {
+      console.error(" ERROR LOGIN:", err);
+
+      if (err.response?.status === 401) {
+        setError("Credenciales incorrectas");
+      } else {
+        setError("Error del servidor o configuración");
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -62,15 +80,11 @@ const handleSubmit = async (e) => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Correo electrónico
               </label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -80,15 +94,11 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Contraseña
               </label>
               <input
                 type="password"
-                id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}

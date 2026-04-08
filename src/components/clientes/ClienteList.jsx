@@ -1,4 +1,30 @@
 function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo }) {
+  const clientesUnicos = (() => {
+    if (!Array.isArray(clientes)) return [];
+
+    const seen = new Set();
+    const resultado = [];
+
+    for (const c of clientes) {
+      if (!c) continue; // evita null/undefined
+
+      const key =
+        c.id ??
+        c.cliente_id ??
+        c.email ??
+        `${c.nombre}-${c.telefono}`;
+
+      if (!key) continue; // ultra defensa
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        resultado.push(c);
+      }
+    }
+
+    return resultado;
+  })();
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Buscador */}
@@ -29,7 +55,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
       <div className="overflow-x-auto">
         {loading ? (
           <SkeletonTable />
-        ) : clientes.length === 0 ? (
+        ) : clientesUnicos.length === 0 ? (
           <EmptyState busqueda={busqueda} onNuevo={onNuevo} />
         ) : (
           <table className="min-w-full text-sm">
@@ -53,24 +79,30 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {clientes.map((c) => {
-                const id = c.id ?? c.cliente_id;
-                const iniciales = (c.nombre ?? "?")
+              {clientesUnicos.map((c) => {
+                const id =
+                  c.id ??
+                  c.cliente_id ??
+                  c.email ??
+                  `${c.nombre}-${c.telefono}`;
+                const nombreSeguro = c.nombre ?? "Sin nombre";
+
+                const iniciales = nombreSeguro
                   .split(" ")
                   .slice(0, 2)
-                  .map((n) => n[0])
+                  .map((n) => n[0] ?? "")
                   .join("")
                   .toUpperCase();
 
                 return (
                   <tr
-                    key={id}
+                    key={String(id)}
                     className="hover:bg-gray-50 transition-colors group"
                   >
                     {/* Nombre + avatar */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
                           {iniciales}
                         </div>
                         <span className="font-medium text-gray-900">
@@ -117,9 +149,9 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
       </div>
 
       {/* Footer con conteo */}
-      {!loading && clientes.length > 0 && (
+      {!loading && clientesUnicos.length > 0 && (
         <div className="px-6 py-3 border-t border-gray-100 text-xs text-gray-400">
-          {clientes.length} resultado{clientes.length !== 1 ? "s" : ""}
+          {clientesUnicos.length} resultado{clientesUnicos.length !== 1 ? "s" : ""}
           {busqueda && ` para "${busqueda}"`}
         </div>
       )}
@@ -148,7 +180,7 @@ function SkeletonTable() {
     <div className="divide-y divide-gray-50">
       {[...Array(5)].map((_, i) => (
         <div key={i} className="px-6 py-4 flex items-center gap-4 animate-pulse">
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0" />
+          <div className="w-8 h-8 bg-gray-200 rounded-full shrink-0" />
           <div className="flex-1 space-y-2">
             <div className="h-3 bg-gray-200 rounded w-1/3" />
             <div className="h-3 bg-gray-100 rounded w-1/4" />

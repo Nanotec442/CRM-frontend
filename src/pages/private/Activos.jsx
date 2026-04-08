@@ -1,15 +1,28 @@
-export default function ActivoList({ activos }) {
-  return (
-    <div className="bg-white p-4 rounded shadow">
-      <h2 className="font-bold mb-4">Activos</h2>
+import { useActivo } from "../../hooks/useActivo";
+import ActivoForm from "../../components/activos/ActivoForm";
+import ActivoList from "../../components/activos/ActivoList";
 
-      {activos.map((a) => (
-        <div key={a.id} className="border p-3 mb-2 rounded">
-          <p><strong>{a.nombre}</strong></p>
-          <p>{a.tipo}</p>
-          <p>${a.precio_base}</p>
-        </div>
-      ))}
+const Activos = () => {
+  const {
+    activos,
+    crearActivo,
+    editarActivo,
+    eliminarActivo,
+  } = useActivo();
+
+  return (
+    <div>
+      <h1>Activos</h1>
+
+      <ActivoForm onSubmit={crearActivo} />
+
+      <ActivoList
+        activos={activos}
+        onEditar={editarActivo}
+        onEliminar={eliminarActivo}
+      />
     </div>
   );
-}
+};
+
+export default Activos;

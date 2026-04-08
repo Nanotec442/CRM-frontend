@@ -20,7 +20,7 @@ function Navbar() {
             to="/"
             className="text-sm font-medium text-slate-600 hover:text-slate-900"
           >
-            Servicios
+            Activo
           </Link>
 
           <Link

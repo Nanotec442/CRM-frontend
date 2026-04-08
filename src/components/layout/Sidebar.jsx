@@ -4,7 +4,7 @@ function Sidebar() {
 
   const navigate = useNavigate();
 
-  const handleLogout = () =>{
+  const handleLogout = () => {
     localStorage.removeItem("isAuth");
     navigate("/login");
   };
@@ -19,79 +19,79 @@ function Sidebar() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold">CRM PIVOT 360LAB</h2>
         <p className="text-sm text-slate-400 mt-1">Panel administrativo</p>
-      
 
-      <nav className="space-y-2">
-        <NavLink
-          to="/panel"
-          end
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Dashboard
-        </NavLink>
 
-        <NavLink
-          to="/panel/clientes"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Clientes
-        </NavLink>
+        <nav className="space-y-2">
+          <NavLink
+            to="/panel"
+            end
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Dashboard
+          </NavLink>
 
-        <NavLink
-          to="/panel/reservas"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Reservas
-        </NavLink>
+          <NavLink
+            to="/panel/clientes"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Clientes
+          </NavLink>
+          <NavLink
+            to="/panel/activos"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Activos
+          </NavLink>
 
-        <NavLink
-          to="/panel/servicios"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Servicios
-        </NavLink>
+          <NavLink
+            to="/panel/reservas"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Reservas
+          </NavLink>
 
-        <NavLink
-          to="/panel/reportes"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Reportes
-        </NavLink>
 
-        <NavLink
-          to="/panel/asistente-ia"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Asistente IA
-        </NavLink>
+          <NavLink
+            to="/panel/reportes"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Reportes
+          </NavLink>
 
-        <NavLink
-          to="/panel/configuracion"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? linkActive : linkInactive}`
-          }
-        >
-          Configuración
-        </NavLink>
-      </nav>
+          <NavLink
+            to="/panel/asistente-ia"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Asistente IA
+          </NavLink>
+
+          <NavLink
+            to="/panel/configuracion"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Configuración
+          </NavLink>
+        </nav>
       </div>
 
       <div className="mt-auto pt-6">
-        <button 
-        onClick={handleLogout}
-        className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700"
+        <button
+          onClick={handleLogout}
+          className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700"
         >
           Cerrar sesión
         </button>

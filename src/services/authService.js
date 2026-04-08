@@ -4,7 +4,7 @@ const API_URL = "http://127.0.0.1:8000";
 
 export const login = async (email, password) => {
   const params = new URLSearchParams();
-  params.append("username", email); // IMPORTANTE: backend espera username
+  params.append("username", email);
   params.append("password", password);
 
   const response = await axios.post(

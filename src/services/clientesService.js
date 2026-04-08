@@ -1,9 +1,5 @@
 import api from "./api";
 
-const getTenantId = () =>
-  localStorage.getItem("tenant_id") ||
-  "014ff4c2-6f6d-42b4-82bc-7c04f07495b4";
-
 export const clientesService = {
   async listar() {
     const res = await api.get("/crm/clientes");
@@ -11,13 +7,20 @@ export const clientesService = {
   },
 
   async crear(formData) {
+    const tenantId = localStorage.getItem("tenant_id");
+
+    if (!tenantId) {
+      throw new Error("No hay tenant_id en localStorage");
+    }
+
     const payload = {
       nombre_completo: formData.nombre,
       email: formData.email,
       telefono: formData.telefono,
-      empresa: formData.empresa,
-      notas: formData.notas,
-      tenant_id: getTenantId(),
+      rut_documento: formData.rut || "",
+      origen: "manual",
+      datos_extraidos_ocr: {},
+      tenant_id: tenantId,
     };
 
     const res = await api.post("/crm/clientes", payload);
@@ -29,9 +32,6 @@ export const clientesService = {
       nombre_completo: formData.nombre,
       email: formData.email,
       telefono: formData.telefono,
-      empresa: formData.empresa,
-      notas: formData.notas,
-      tenant_id: getTenantId(),
     };
 
     const res = await api.patch(`/crm/clientes/${clienteId}`, payload);
@@ -44,7 +44,7 @@ export const clientesService = {
   },
 
   async eliminar(clienteId) {
-  const res = await api.delete(`/crm/clientes/${clienteId}`);
-  return res.data;
-}
+    const res = await api.delete(`/crm/clientes/${clienteId}`);
+    return res.data;
+  }
 };

@@ -12,103 +12,68 @@ const Reservas = () => {
   const [vista, setVista] = useState("calendario");
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ marginBottom: 20 }}>Reservas</h1>
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-slate-800">Gestión de Reservas</h1>
 
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 20,
-            width: "100%",
-            maxWidth: 900,
-          }}
-        >
-          <ReservaForm onSuccess={cargarReservas} />
-          <ProximasReservas reservas={reservasSeguras} />
-        </div>
-
+      {/* Grid Superior: Formulario y Próximas Reservas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-start">
+        <ReservaForm onSuccess={cargarReservas} />
+        <ProximasReservas reservas={reservasSeguras} />
       </div>
 
-      {/* Tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          margin: "30px 0 20px",
-          justifyContent: "center",
-        }}
-      >
+      {/* Selector de Vistas (Tabs) */}
+      <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setVista("calendario")}
-          style={{
-            padding: "8px 18px",
-            borderRadius: 8,
-            border: "1px solid #e2e8f0",
-            background: vista === "calendario" ? "#1e293b" : "#f8fafc",
-            color: vista === "calendario" ? "#fff" : "#334155",
-            cursor: "pointer",
-            fontWeight: 500,
-          }}
+          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+            vista === "calendario"
+              ? "bg-slate-800 text-white shadow-md"
+              : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+          }`}
         >
           Calendario
         </button>
-
         <button
           onClick={() => setVista("lista")}
-          style={{
-            padding: "8px 18px",
-            borderRadius: 8,
-            border: "1px solid #e2e8f0",
-            background: vista === "lista" ? "#1e293b" : "#f8fafc",
-            color: vista === "lista" ? "#fff" : "#334155",
-            cursor: "pointer",
-            fontWeight: 500,
-          }}
+          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+            vista === "lista"
+              ? "bg-slate-800 text-white shadow-md"
+              : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+          }`}
         >
-          Lista
+          Lista de Reservas
         </button>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        
+      {/* Contenedor de Vistas */}
+      <div className="max-w-5xl mx-auto">
         {/* Vista Calendario */}
         {vista === "calendario" && (
-          <div style={{ marginBottom: 20 }}>
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <Calendario reservas={reservasSeguras} />
           </div>
         )}
 
         {/* Vista Lista */}
         {vista === "lista" && (
-          <>
+          <div className="flex flex-col gap-4">
             {reservasSeguras.length === 0 ? (
-              <p style={{ textAlign: "center", color: "#64748b" }}>
-                No hay reservas aún
-              </p>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                }}
-              >
-                {reservasSeguras.map((r) => (
-                  <ReservaCard
-                    key={r.id}
-                    reserva={r}
-                    onCancelar={cancelarReserva}
-                    onFirmar={(reserva) => {
-                      console.log("Abrir firma:", reserva);
-                    }}
-                  />
-                ))}
+              <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-slate-500 font-medium">No hay reservas registradas en el sistema.</p>
               </div>
+            ) : (
+              reservasSeguras.map((r) => (
+                <ReservaCard
+                  key={r.id}
+                  reserva={r}
+                  onCancelar={cancelarReserva}
+                  onFirmar={(reserva) => {
+                    console.log("Abrir módulo de firma para:", reserva);
+                  }}
+                />
+              ))
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
