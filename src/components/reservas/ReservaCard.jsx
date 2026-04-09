@@ -1,106 +1,89 @@
 const ReservaCard = ({ reserva, onCancelar, onFirmar }) => {
   const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString("es-CL");
+    return new Date(fecha).toLocaleString("es-CL", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
   };
 
   const getEstadoColor = (estado) => {
     switch (estado?.toLowerCase()) {
       case "confirmada":
-        return "#16a34a";
+        return "border-green-500";
       case "cancelada":
-        return "#dc2626";
+        return "border-red-600";
+      default: // pendiente
+        return "border-amber-500";
+    }
+  };
+
+  const getBadgeColor = (estado) => {
+    switch (estado?.toLowerCase()) {
+      case "confirmada":
+        return "bg-green-500";
+      case "cancelada":
+        return "bg-red-600";
       default:
-        return "#f59e0b";
+        return "bg-amber-500";
     }
   };
 
   return (
     <div
-      style={{
-        background: "#fff",
-        padding: "18px",
-        borderRadius: "14px",
-        marginBottom: "14px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-        borderLeft: `6px solid ${getEstadoColor(reserva.estado)}`,
-      }}
+      className={`bg-white p-5 rounded-xl mb-4 shadow-sm border border-gray-100 border-l-[6px] ${getEstadoColor(
+        reserva.estado
+      )} transition-all hover:shadow-md`}
     >
       {/* HEADER */}
-      <div
-        style={{
-          marginBottom: "10px",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
+      <div className="flex justify-between items-start mb-3">
         <div>
-          <strong style={{ fontSize: "15px" }}>
+          <strong className="text-[15px] text-slate-800 flex items-center gap-1.5">
             👤 {reserva.cliente?.nombre_completo || "Sin cliente"}
           </strong>
-          <div style={{ fontSize: "13px", color: "#64748b" }}>
+          <div className="text-[13px] text-slate-500 flex items-center gap-1.5 mt-1">
             🏢 {reserva.activo?.nombre || "Sin activo"}
           </div>
         </div>
 
         <span
-          style={{
-            background: getEstadoColor(reserva.estado),
-            color: "#fff",
-            padding: "4px 10px",
-            borderRadius: "999px",
-            fontSize: "12px",
-          }}
+          className={`${getBadgeColor(
+            reserva.estado
+          )} text-white px-3 py-1 rounded-full text-xs font-medium capitalize shadow-sm`}
         >
           {reserva.estado || "Pendiente"}
         </span>
       </div>
 
       {/* INFO */}
-      <div style={{ fontSize: "14px", marginBottom: "12px", color: "#334155" }}>
-        <p>🕒 <strong>Inicio:</strong> {formatearFecha(reserva.fecha_inicio)}</p>
-        <p>🏁 <strong>Fin:</strong> {formatearFecha(reserva.fecha_fin)}</p>
+      <div className="text-sm mb-4 text-slate-600 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-100">
+        <p>
+          <strong className="text-slate-700">🕒 Inicio:</strong>{" "}
+          {formatearFecha(reserva.fecha_inicio)}
+        </p>
+        <p>
+          <strong className="text-slate-700">🏁 Fin:</strong>{" "}
+          {formatearFecha(reserva.fecha_fin)}
+        </p>
       </div>
 
       {/* ACCIONES */}
-      <div style={{ display: "flex", gap: "10px" }}>
+      <div className="flex gap-3">
         <button
           onClick={() => onFirmar?.(reserva)}
-          style={btnPrimary}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors cursor-pointer"
         >
-           Firmar
+          Firmar
         </button>
 
         <button
           onClick={() => onCancelar(reserva.id)}
-          style={btnDanger}
+          className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium transition-colors cursor-pointer"
         >
           Cancelar
         </button>
       </div>
     </div>
   );
-};
-
-const btnPrimary = {
-  flex: 1,
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  padding: "8px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "500",
-};
-
-const btnDanger = {
-  flex: 1,
-  background: "#dc2626",
-  color: "#fff",
-  border: "none",
-  padding: "8px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "500",
 };
 
 export default ReservaCard;

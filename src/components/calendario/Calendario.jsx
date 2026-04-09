@@ -1,21 +1,28 @@
-import { reservasService } from "../../services/reservasService";
 import { useState, useMemo, useEffect } from "react";
 
 const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const MESES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
 const hoy = new Date();
 
 function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() &&
+  return (
+    a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+    a.getDate() === b.getDate()
+  );
 }
+
 function fmtHora(date) {
   return date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
 }
+
 function fmtFecha(date) {
-  return `${String(date.getDate()).padStart(2,"0")}/${String(date.getMonth()+1).padStart(2,"0")}/${date.getFullYear()}`;
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 }
+
 function getDaysInMonth(year, month) {
   const days = [];
   const first = new Date(year, month, 1);
@@ -24,7 +31,9 @@ function getDaysInMonth(year, month) {
     days.push({ date: new Date(year, month, -startDow + i + 1), outside: true });
   }
   const total = new Date(year, month + 1, 0).getDate();
-  for (let i = 1; i <= total; i++) days.push({ date: new Date(year, month, i), outside: false });
+  for (let i = 1; i <= total; i++) {
+    days.push({ date: new Date(year, month, i), outside: false });
+  }
   while (days.length % 7 !== 0) {
     const next = new Date(days[days.length - 1].date);
     next.setDate(next.getDate() + 1);
@@ -44,27 +53,15 @@ function EventCard({ ev }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 5,
-        background: hovered ? "#2563eb" : "#3b82f6",
-        borderRadius: 6,
-        padding: "3px 7px",
-        cursor: "pointer",
-        overflow: "hidden",
-        transition: "all 0.15s ease",
-        transform: hovered ? "scale(1.02)" : "scale(1)",
-        boxShadow: hovered
-          ? "0 3px 10px rgba(59,130,246,0.35)"
-          : "0 1px 3px rgba(59,130,246,0.15)",
-      }}
+      className={`flex items-center gap-1.5 rounded-md px-2 py-1 cursor-pointer overflow-hidden transition-all duration-150 ease-in-out ${
+        hovered ? "bg-blue-600 scale-[1.02] shadow-md shadow-blue-500/30" : "bg-blue-500 shadow-sm shadow-blue-500/15"
+      }`}
     >
-      <div style={{ width:5, height:5, borderRadius:"50%", background:"rgba(255,255,255,0.6)", flexShrink:0 }} />
-      <span style={{ fontSize:10, color:"rgba(255,255,255,0.85)", fontWeight:500, flexShrink:0, letterSpacing:"0.01em" }}>
+      <div className="w-1.5 h-1.5 rounded-full bg-white/60 shrink-0" />
+      <span className="text-[10px] text-white/85 font-medium shrink-0 tracking-wide">
         {hora}
       </span>
-      <span style={{ fontSize:11, color:"#fff", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
+      <span className="text-[11px] text-white font-medium truncate flex-1">
         {cliente}
       </span>
     </div>
@@ -77,35 +74,43 @@ function VistaMes({ year, month, eventos }) {
 
   return (
     <div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", borderBottom:"0.5px solid var(--color-border-tertiary)" }}>
-        {DIAS.map(d => (
-          <div key={d} style={{ textAlign:"center", padding:"10px 0", fontSize:11, fontWeight:600, color:"var(--color-text-secondary)", letterSpacing:"0.05em", textTransform:"uppercase" }}>
+      <div className="grid grid-cols-7 border-b border-gray-200">
+        {DIAS.map((d) => (
+          <div key={d} className="text-center py-2.5 text-[11px] font-semibold text-gray-500 tracking-wider uppercase">
             {d}
           </div>
         ))}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)" }}>
+      <div className="grid grid-cols-7">
         {days.map(({ date, outside }, i) => {
-          const evs = eventos.filter(e => isSameDay(e.start, date));
+          const evs = eventos.filter((e) => isSameDay(e.start, date));
           const esHoy = isSameDay(date, hoy);
           return (
             <div
               key={i}
-              style={{ minHeight:100, borderRight:"0.5px solid var(--color-border-tertiary)", borderBottom:"0.5px solid var(--color-border-tertiary)", padding:"6px 5px 5px", background:"transparent", transition:"background 0.15s" }}
-              onMouseEnter={e => { if (!outside) e.currentTarget.style.background = "#f8fafc"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+              className={`min-h-[100px] border-r border-b border-gray-200 p-1.5 transition-colors duration-150 ${
+                outside ? "bg-gray-50/50" : "hover:bg-slate-50 bg-white"
+              }`}
             >
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:5 }}>
-                <div style={{ width:26, height:26, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:esHoy?700:400, background:esHoy?"#1e293b":"transparent", color:esHoy?"#fff":outside?"#cbd5e1":"#334155", boxShadow:esHoy?"0 2px 8px rgba(30,41,59,0.18)":"none", transition:"all 0.15s" }}>
+              <div className="flex justify-center mb-1.5">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all ${
+                    esHoy
+                      ? "bg-slate-800 text-white font-bold shadow-md"
+                      : outside
+                      ? "text-gray-400 font-normal"
+                      : "text-slate-700 font-normal"
+                  }`}
+                >
                   {date.getDate()}
                 </div>
               </div>
-              <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
-                {evs.slice(0,2).map((ev, j) => (
+              <div className="flex flex-col gap-1">
+                {evs.slice(0, 2).map((ev, j) => (
                   <EventCard key={j} ev={ev} />
                 ))}
                 {evs.length > 2 && (
-                  <div style={{ fontSize:10, fontWeight:500, color:"#64748b", padding:"1px 5px", textAlign:"center", letterSpacing:"0.02em" }}>
+                  <div className="text-[10px] font-medium text-slate-500 px-1 text-center tracking-wide">
                     +{evs.length - 2} más
                   </div>
                 )}
@@ -120,34 +125,85 @@ function VistaMes({ year, month, eventos }) {
 
 // ── Vista Agenda ───────────────────────────────────────────────────────────
 function VistaAgenda({ year, month, eventos }) {
-  const evs = useMemo(() =>
-    eventos
-      .filter(e => e.start.getFullYear() === year && e.start.getMonth() === month)
-      .sort((a, b) => a.start - b.start),
+  // Filtramos y ordenamos los eventos del mes
+  const evs = useMemo(
+    () =>
+      eventos
+        .filter((e) => e.start.getFullYear() === year && e.start.getMonth() === month)
+        .sort((a, b) => a.start - b.start),
     [eventos, year, month]
   );
 
+  // Agrupamos los eventos por fecha para que no se repita el día en cada fila
+  const eventosAgrupados = useMemo(() => {
+    const grupos = {};
+    evs.forEach(ev => {
+      // Formateamos: "Lunes, 15 de Abril"
+      const fechaStr = ev.start.toLocaleDateString("es-CL", { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+      });
+      if (!grupos[fechaStr]) grupos[fechaStr] = [];
+      grupos[fechaStr].push(ev);
+    });
+    return grupos;
+  }, [evs]);
+
   if (evs.length === 0) {
     return (
-      <div style={{ padding:"48px 24px", textAlign:"center", color:"var(--color-text-secondary)", fontSize:14 }}>
-        No hay reservas en este mes
+      <div className="py-16 flex flex-col items-center justify-center">
+        <span className="text-4xl mb-3">📅</span>
+        <p className="text-slate-500 font-medium">No hay reservas agendadas en este mes.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding:"12px 0" }}>
-      {evs.map((ev, i) => (
-        <div key={i}
-          style={{ display:"flex", alignItems:"center", gap:16, padding:"12px 18px", borderBottom:"0.5px solid var(--color-border-tertiary)", transition:"background 0.1s" }}
-          onMouseEnter={e => e.currentTarget.style.background = "var(--color-background-secondary)"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-        >
-          <div style={{ width:86, flexShrink:0, fontSize:13, color:"var(--color-text-secondary)" }}>{fmtFecha(ev.start)}</div>
-          <div style={{ width:4, alignSelf:"stretch", background:"#3b82f6", borderRadius:2, flexShrink:0 }} />
-          <div style={{ minWidth:0 }}>
-            <div style={{ fontSize:14, fontWeight:500, color:"var(--color-text-primary)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.title}</div>
-            <div style={{ fontSize:12, color:"var(--color-text-secondary)", marginTop:2 }}>{fmtHora(ev.start)} – {fmtHora(ev.end)}</div>
+    <div className="py-4 px-6 max-h-500 overflow-y-auto">
+      {Object.entries(eventosAgrupados).map(([fecha, eventosDelDia], index) => (
+        <div key={index} className="mb-6 last:mb-2">
+          
+          {/* Encabezado del Día (Pegajoso / Sticky) */}
+          <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 py-2 border-b border-gray-100 mb-3">
+            <h3 className="text-sm font-bold text-slate-700 capitalize flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span>
+              {fecha}
+            </h3>
+          </div>
+
+          {/* Lista de eventos tipo Timeline */}
+          <div className="flex flex-col gap-3 pl-3 border-l-2 border-gray-100 ml-1">
+            {eventosDelDia.map((ev, i) => {
+              // Obtenemos el estado directo del dato original para colorear el borde
+              const estado = ev.raw?.estado?.toLowerCase() || 'pendiente';
+              const colorBorde = 
+                estado === 'confirmada' ? 'border-green-500' : 
+                estado === 'cancelada' ? 'border-red-500' : 'border-amber-500';
+
+              return (
+                <div
+                  key={i}
+                  className={`relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all border-l-4 ${colorBorde} group cursor-pointer`}
+                >
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[14px] font-semibold text-slate-800 truncate">
+                      {ev.title}
+                    </span>
+                    <span className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                      🕒 {fmtHora(ev.start)} – {fmtHora(ev.end)}
+                    </span>
+                  </div>
+                  
+                  {/* Badge de Estado */}
+                  <div className="flex items-center self-start sm:self-auto shrink-0">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 capitalize">
+                      {estado}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -157,98 +213,85 @@ function VistaAgenda({ year, month, eventos }) {
 
 // ── Componente principal ───────────────────────────────────────────────────
 const VIEWS = [
-  { key:"month",  label:"Mes" },
-  { key:"agenda", label:"Agenda" },
+  { key: "month", label: "Mes" },
+  { key: "agenda", label: "Agenda" },
 ];
 
-export default function Calendario() {
-  const [view, setView]         = useState("month");
-  const [current, setCurrent]   = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
-  const [reservas, setReservas] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+export default function Calendario({reservas = []}) {
+  const [view, setView] = useState("month");
+  const [current, setCurrent] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
 
-  const year  = current.getFullYear();
+  const year = current.getFullYear();
   const month = current.getMonth();
 
-  useEffect(() => {
-    const cargar = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await reservasService.listar();
-        setReservas(data ?? []);
-      } catch (err) {
-        console.error("Error cargando reservas:", err);
-        setError("No se pudieron cargar las reservas.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargar();
-  }, []);
 
-  const eventos = useMemo(() =>
-    reservas.map(r => ({
-      title: `${r.cliente?.nombre_completo || "Sin cliente"} – ${r.activo?.nombre || "Activo"}`,
-      start: new Date(r.fecha_inicio),
-      end:   new Date(r.fecha_fin),
-      raw:   r,
-    })),
+
+  const eventos = useMemo(
+    () =>
+      reservas.map((r) => ({
+        title: `${r.cliente?.nombre_completo || "Sin cliente"} – ${r.activo?.nombre || "Activo"}`,
+        start: new Date(r.fecha_inicio),
+        end: new Date(r.fecha_fin),
+        raw: r,
+      })),
     [reservas]
   );
+  
 
   const goHoy = () => setCurrent(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
-  const prev  = () => setCurrent(new Date(year, month - 1, 1));
-  const next  = () => setCurrent(new Date(year, month + 1, 1));
+  const prev = () => setCurrent(new Date(year, month - 1, 1));
+  const next = () => setCurrent(new Date(year, month + 1, 1));
 
   const headerLabel = `${MESES[month]} ${year}`;
 
   return (
-    <div style={{ padding:"24px", fontFamily:"var(--font-sans, sans-serif)", background:"#f1f5f9", minHeight:"100vh" }}>
-      <div style={{ background:"#ffffff", borderRadius:18, border:"1px solid #e2e8f0", overflow:"hidden", boxShadow:"0 10px 30px rgba(0,0,0,0.08)" }}>
-
+    // ELIMINADO EL minHeight:"100vh" Y EL FONDO EXCESIVO
+    <div className="w-full font-sans">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        
         {/* Toolbar */}
-        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"14px 18px", borderBottom:"1px solid #e2e8f0", background:"#f8fafc", flexWrap:"wrap" }}>
-          <button onClick={goHoy} style={btnOutline}>Hoy</button>
-          <button onClick={prev}  style={{ ...btnOutline, padding:"5px 10px" }}>‹</button>
-          <button onClick={next}  style={{ ...btnOutline, padding:"5px 10px" }}>›</button>
-          <span style={{ flex:1, fontWeight:500, fontSize:15, color:"var(--color-text-primary)", marginLeft:4 }}>{headerLabel}</span>
-          <div style={{ display:"flex", border:"0.5px solid var(--color-border-tertiary)", borderRadius:8, overflow:"hidden" }}>
-            {VIEWS.map(v => (
-              <button key={v.key} onClick={() => setView(v.key)} style={{ padding:"5px 14px", border:"none", cursor:"pointer", fontSize:13, background:view===v.key?"#1e293b":"transparent", color:view===v.key?"#fff":"var(--color-text-secondary)", transition:"all 0.15s", borderRight:"0.5px solid var(--color-border-tertiary)" }}>
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-200 bg-slate-50 flex-wrap">
+          <button onClick={goHoy} className="px-3.5 py-1.5 bg-white text-slate-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
+            Hoy
+          </button>
+          <button onClick={prev} className="px-2.5 py-1.5 bg-white text-slate-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
+            ‹
+          </button>
+          <button onClick={next} className="px-2.5 py-1.5 bg-white text-slate-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors">
+            ›
+          </button>
+          
+          <span className="flex-1 font-semibold text-[15px] text-slate-800 ml-2 capitalize">
+            {headerLabel}
+          </span>
+          
+          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            {VIEWS.map((v) => (
+              <button
+                key={v.key}
+                onClick={() => setView(v.key)}
+                className={`px-4 py-1.5 text-sm transition-colors ${
+                  view === v.key
+                    ? "bg-slate-800 text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-100"
+                } ${v.key === "month" ? "border-r border-gray-300" : ""}`}
+              >
                 {v.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Estados */}
-        {loading && (
-          <div style={{ padding:"48px 24px", textAlign:"center", color:"var(--color-text-secondary)", fontSize:14 }}>
-            Cargando reservas…
-          </div>
-        )}
-        {!loading && error && (
-          <div style={{ padding:"32px 24px", textAlign:"center", color:"#ef4444", fontSize:14 }}>{error}</div>
-        )}
+
 
         {/* Contenido */}
-        {!loading && !error && view === "month"  && <VistaMes   year={year} month={month} eventos={eventos} />}
-        {!loading && !error && view === "agenda" && <VistaAgenda year={year} month={month} eventos={eventos} />}
+        {view === "month" && (
+          <VistaMes year={year} month={month} eventos={eventos} />
+        )}
+        {view === "agenda" && (
+          <VistaAgenda year={year} month={month} eventos={eventos} />
+        )}
       </div>
     </div>
   );
 }
-
-// ── Estilos ────────────────────────────────────────────────────────────────
-const btnOutline = {
-  padding: "6px 14px",
-  background: "#f8fafc",
-  color: "#334155",
-  border: "1px solid #e2e8f0",
-  borderRadius: 8,
-  cursor: "pointer",
-  fontSize: 13,
-  transition: "all 0.2s",
-};
