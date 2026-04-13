@@ -11,7 +11,7 @@ export const useActivo = () => {
     setError(null);
     try {
       const res = await activosService.getActivos();
-      setActivos(res.data);
+      setActivos(res.data || res); // Dependiendo de cómo responda Axios
     } catch (err) {
       console.error(err);
       setError(err);
@@ -46,10 +46,26 @@ export const useActivo = () => {
     }
   };
 
+  // Función para Desactivar
   const eliminarActivo = async (id) => {
     setLoading(true);
     try {
       await activosService.desactivarActivo(id);
+      await fetchActivos();
+    } catch (err) {
+      console.error(err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 NUEVA FUNCIÓN: Para Reactivar
+  const activarActivo = async (id) => {
+    setLoading(true);
+    try {
+      // Usamos el update general para cambiarle el estado de vuelta a Operativo
+      await activosService.updateActivo(id, { estado: "Operativo" }); 
       await fetchActivos();
     } catch (err) {
       console.error(err);
@@ -71,5 +87,6 @@ export const useActivo = () => {
     crearActivo,
     editarActivo,
     eliminarActivo,
+    activarActivo, // <-- No olvides exportarla aquí
   };
 };

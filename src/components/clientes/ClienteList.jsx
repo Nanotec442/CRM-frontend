@@ -6,7 +6,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
     const resultado = [];
 
     for (const c of clientes) {
-      if (!c) continue; // evita null/undefined
+      if (!c) continue;
 
       const key =
         c.id ??
@@ -67,9 +67,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Contacto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Empresa
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
@@ -121,10 +119,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                       </div>
                     </td>
 
-                    {/* Empresa */}
-                    <td className="px-6 py-4 text-gray-600">
-                      {c.empresa || <span className="text-gray-300">—</span>}
-                    </td>
+
 
                     {/* Badge estado */}
                     <td className="px-6 py-4">

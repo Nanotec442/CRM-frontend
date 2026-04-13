@@ -16,7 +16,10 @@ function isSameDay(a, b) {
 }
 
 function fmtHora(date) {
-  return date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("es-CL", { 
+    hour: "2-digit", 
+    minute: "2-digit",
+    hour12: false });
 }
 
 function fmtFecha(date) {
@@ -45,25 +48,74 @@ function getDaysInMonth(year, month) {
 // ── EventCard ──────────────────────────────────────────────────────────────
 function EventCard({ ev }) {
   const [hovered, setHovered] = useState(false);
+  
+  // Extraemos la información usando el split que ya tenías
   const partes = ev.title.split(" – ");
   const cliente = partes[0] ?? ev.title;
-  const hora = fmtHora(ev.start);
+  const activo = partes[1] ?? "Sin activo"; // Ahora capturamos el activo
+  const horaInicio = fmtHora(ev.start);
+  const horaFin = fmtHora(ev.end);
+  const estado = ev.raw?.estado || "Pendiente"; // Estado desde tu backend
+
+  // Función auxiliar para pintar el estado dentro de la tarjetita flotante
+  const getBadgeColor = (est) => {
+    switch (est?.toLowerCase()) {
+      case "confirmada": return "bg-green-100 text-green-700";
+      case "cancelada": return "bg-red-100 text-red-700";
+      default: return "bg-amber-100 text-amber-700";
+    }
+  };
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`flex items-center gap-1.5 rounded-md px-2 py-1 cursor-pointer overflow-hidden transition-all duration-150 ease-in-out ${
-        hovered ? "bg-blue-600 scale-[1.02] shadow-md shadow-blue-500/30" : "bg-blue-500 shadow-sm shadow-blue-500/15"
+      // ⚠️ MUY IMPORTANTE: Se quitó "overflow-hidden" y se agregó "relative"
+      // para que la tarjeta flotante pueda "salirse" de los bordes.
+      className={`relative flex items-center gap-1.5 rounded-md px-2 py-1 cursor-pointer transition-all duration-150 ease-in-out ${
+        hovered ? "bg-blue-600 scale-[1.02] shadow-md shadow-blue-500/30 z-40" : "bg-blue-500 shadow-sm shadow-blue-500/15 z-10"
       }`}
     >
       <div className="w-1.5 h-1.5 rounded-full bg-white/60 shrink-0" />
       <span className="text-[10px] text-white/85 font-medium shrink-0 tracking-wide">
-        {hora}
+        {horaInicio}
       </span>
+      {/* El texto de la barrita sigue usando "truncate" para cortarse bonito */}
       <span className="text-[11px] text-white font-medium truncate flex-1">
         {cliente}
       </span>
+
+      {/* 💎 LA TARJETA FLOTANTE (TOOLTIP) 💎 */}
+      {/* Solo se dibuja cuando pasas el mouse por encima (hovered === true) */}
+      {hovered && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white rounded-xl shadow-xl shadow-slate-200/50 border border-slate-200 p-3 flex flex-col gap-2 cursor-default z-50 animate-fade-in">
+          
+          {/* Triángulo apuntando hacia abajo */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white z-10"></div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-200"></div>
+
+          {/* Contenido Superior: Nombre y Estado */}
+          <div className="flex justify-between items-start gap-2">
+            <strong className="text-slate-800 text-[13px] font-bold leading-snug wrap-break-word">
+              {cliente}
+            </strong>
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md capitalize shrink-0 ${getBadgeColor(estado)}`}>
+              {estado}
+            </span>
+          </div>
+          
+          {/* Información Secundaria */}
+          <div className="text-[11px] text-slate-600 flex items-start gap-1.5 mt-1">
+             <span className="shrink-0 text-[12px]">🏢</span> 
+             <span className="leading-tight font-medium">{activo}</span>
+          </div>
+          
+          <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+             <span className="shrink-0 text-[12px]">🕒</span> 
+             <span className="font-medium">{horaInicio} – {horaFin}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -88,7 +140,7 @@ function VistaMes({ year, month, eventos }) {
           return (
             <div
               key={i}
-              className={`min-h-[100px] border-r border-b border-gray-200 p-1.5 transition-colors duration-150 ${
+              className={`min-h-25 border-r border-b border-gray-200 p-1.5 transition-colors duration-150 ${
                 outside ? "bg-gray-50/50" : "hover:bg-slate-50 bg-white"
               }`}
             >
