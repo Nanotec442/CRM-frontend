@@ -52,26 +52,27 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full font-sans">
+      
       {/* Header del form */}
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900">
-          {clienteEditando ? "Editar cliente" : "Nuevo cliente"}
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+        <h2 className="font-bold text-slate-900 text-lg">
+          {clienteEditando ? "Editar Cliente" : "Registro Manual"}
         </h2>
         <button
           type="button"
           onClick={onCancelar}
-          className="text-gray-400 hover:text-gray-600 transition-colors text-lg leading-none"
+          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 flex items-center justify-center rounded-lg transition-colors text-xl font-medium"
           aria-label="Cerrar"
         >
           ×
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+      <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 flex-1">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-            {error}
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+            ⚠ {error}
           </div>
         )}
 
@@ -84,34 +85,36 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
           required
         />
 
-        <Field
-          label="Email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="correo@ejemplo.com"
-          required
-        />
+        <div className="grid grid-cols-1 gap-5">
+          <Field
+            label="Correo electrónico"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="correo@ejemplo.com"
+            required
+          />
 
-        <Field
-          label="Teléfono"
-          name="telefono"
-          value={form.telefono}
-          onChange={handleChange}
-          placeholder="+56 9 1234 5678"
-        />
+          <Field
+            label="Teléfono"
+            name="telefono"
+            value={form.telefono}
+            onChange={handleChange}
+            placeholder="+56 9 1234 5678"
+          />
+        </div>
 
         <Field
           label="Empresa"
           name="empresa"
           value={form.empresa}
           onChange={handleChange}
-          placeholder="Nombre de la empresa"
+          placeholder="Nombre de la empresa (Opcional)"
         />
 
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-slate-700">
             Notas internas
           </label>
           <textarea
@@ -119,31 +122,31 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
             value={form.notas}
             onChange={handleChange}
             rows={3}
-            placeholder="Observaciones sobre el cliente..."
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none transition"
+            placeholder="Observaciones, acuerdos o detalles importantes del cliente..."
+            className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all text-slate-900 placeholder:text-slate-400"
           />
         </div>
 
-        <div className="flex gap-3 pt-1">
+        <div className="flex gap-3 pt-4 mt-auto">
+          <button
+            type="button"
+            onClick={onCancelar}
+            className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Cancelar
+          </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-gray-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             {loading
               ? clienteEditando
                 ? "Actualizando..."
                 : "Guardando..."
               : clienteEditando
-              ? "Actualizar"
-              : "Guardar cliente"}
-          </button>
-          <button
-            type="button"
-            onClick={onCancelar}
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancelar
+              ? "Actualizar Cliente"
+              : "Guardar Cliente"}
           </button>
         </div>
       </form>
@@ -151,12 +154,13 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
   );
 }
 
+// ─── COMPONENTE REUTILIZABLE PARA INPUTS ───
 function Field({ label, name, type = "text", value, onChange, placeholder, required }) {
   return (
-    <div className="space-y-1">
-      <label className="block text-sm font-medium text-gray-700">
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-slate-700">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-rose-500 ml-1">*</span>}
       </label>
       <input
         type={type}
@@ -165,7 +169,7 @@ function Field({ label, name, type = "text", value, onChange, placeholder, requi
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition"
+        className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 placeholder:text-slate-400"
       />
     </div>
   );

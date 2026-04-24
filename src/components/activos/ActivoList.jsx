@@ -1,76 +1,88 @@
-// 1. Recibimos onActivar como prop
+/**
+ * Listado visual de activos en formato grilla.
+ * Proporciona acciones rápidas para edición, desactivación o reactivación de recursos.
+ */
 const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
+  
   if (!activos.length) {
     return (
-      <p className="text-slate-500 mt-4 px-6 pb-6 text-center">
-        No hay activos registrados
-      </p>
+      <div className="py-20 text-center">
+        <p className="text-slate-400 font-medium italic">
+          No se han encontrado registros de activos.
+        </p>
+      </div>
     );
   }
 
+  // Estilos comunes para etiquetas de datos
+  const labelStyle = "text-[10px] uppercase font-bold text-slate-400 tracking-wider";
+  const valueStyle = "text-sm font-semibold text-slate-700";
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 p-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
       {activos.map((a) => (
         <div
           key={a.id}
-          className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition relative group"
+          className="group bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md hover:ring-slate-300 transition-all duration-200 flex flex-col"
         >
-          {/* HEADER */}
-          {/* HEADER (Opción 1: Etiqueta Arriba) */}
-          <div className="flex flex-col items-start gap-1.5 mb-3">
+          {/* HEADER: Estado y Título */}
+          <div className="flex flex-col items-start gap-2 mb-4">
             <span
-              className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider
+              className={`text-[10px] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest border
                 ${a.estado?.toLowerCase() === "operativo" || a.estado?.toLowerCase() === "disponible"
-                  ? "bg-green-100 text-green-700"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                   : a.estado?.toLowerCase() === "mantenimiento"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
+                    ? "bg-amber-50 text-amber-700 border-amber-100"
+                    : "bg-rose-50 text-rose-700 border-rose-100"
                 }`}
             >
               {a.estado?.replace("_", " ") || "Inactivo"}
             </span>
-            <h3 className="text-lg font-bold text-slate-800 leading-tight">
+            <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
               {a.nombre}
             </h3>
           </div>
 
-          {/* INFO */}
-          <div className="text-sm text-slate-600 space-y-1.5 mb-5">
-            <p className="flex justify-between border-b border-slate-50 pb-1">
-              <span className="text-slate-400 text-xs uppercase font-semibold">Tipo</span>
-              <span className="font-medium">{a.tipo}</span>
-            </p>
-            <p className="flex justify-between border-b border-slate-50 pb-1">
-              <span className="text-slate-400 text-xs uppercase font-semibold">Precio Base</span>
-              <span className="font-medium">${a.precio_base} {a.moneda}</span>
-            </p>
-            <p className="flex justify-between pb-1">
-              <span className="text-slate-400 text-xs uppercase font-semibold">Buffer (Min)</span>
-              <span className="font-medium">{a.buffer_limpieza_minutos} min</span>
-            </p>
+          {/* CUERPO: Información técnica */}
+          <div className="space-y-3 mb-6 flex-1">
+            <div className="flex justify-between items-end border-b border-slate-50 pb-2">
+              <span className={labelStyle}>Tipo</span>
+              <span className={valueStyle}>{a.tipo}</span>
+            </div>
+            
+            <div className="flex justify-between items-end border-b border-slate-50 pb-2">
+              <span className={labelStyle}>Precio Base</span>
+              <span className={`${valueStyle} text-emerald-600`}>
+                ${a.precio_base?.toLocaleString("es-CL")}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-end pb-1">
+              <span className={labelStyle}>Buffer Técnico</span>
+              <span className={valueStyle}>{a.buffer_limpieza_minutos || a.tiempo_buffer_minutos || 0} min</span>
+            </div>
           </div>
 
-          {/* LÓGICA CONDICIONAL DE BOTONES */}
-          <div className="flex justify-end gap-2 mt-auto">
+          {/* ACCIONES: Footer de la tarjeta */}
+          <div className="flex items-center gap-2 pt-4 border-t border-slate-50">
             <button
               onClick={() => onEditar(a)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+              className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white transition-all active:scale-95"
             >
               Editar
             </button>
 
-            {/* Si está inactivo mostramos el botón verde, si no, el botón rojo */}
             {a.estado?.toLowerCase() === "inactivo" ? (
               <button
                 onClick={() => onActivar(a.id)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+                className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
               >
                 Reactivar
               </button>
             ) : (
               <button
                 onClick={() => onEliminar(a.id)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all active:scale-95"
               >
                 Desactivar
               </button>

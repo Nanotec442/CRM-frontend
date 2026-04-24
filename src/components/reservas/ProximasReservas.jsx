@@ -1,5 +1,9 @@
 import { useMemo } from "react";
 
+/**
+ * Listado lateral de las próximas 5 reservas cronológicas.
+ * Proporciona un vistazo rápido a la agenda inmediata del CRM.
+ */
 const ProximasReservas = ({ reservas = [] }) => {
 
   const proximas = useMemo(() => {
@@ -28,56 +32,45 @@ const ProximasReservas = ({ reservas = [] }) => {
   };
 
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        borderRadius: 16,
-        border: "1px solid #e2e8f0",
-        padding: 16,
-        boxShadow: "0 8px 25px rgba(0,0,0,0.05)",
-        minWidth: 260,
-      }}
-    >
-      <h3 style={{ marginBottom: 12, fontSize: 16 }}>
+    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
         Próximas reservas
       </h3>
 
       {proximas.length === 0 ? (
-        <p style={{ fontSize: 13, color: "#64748b" }}>
-          No hay reservas próximas
-        </p>
+        <div className="py-4 text-center">
+          <p className="text-xs text-slate-500 font-medium italic">
+            No hay reservas próximas registradas.
+          </p>
+        </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="flex flex-col gap-3">
           {proximas.map((r) => (
             <div
               key={r.id}
-              style={{
-                padding: 10,
-                borderRadius: 10,
-                border: "1px solid #e2e8f0",
-                background: "#f8fafc",
-                transition: "all 0.2s",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#eef2ff";
-                e.currentTarget.style.transform = "scale(1.02)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#f8fafc";
-                e.currentTarget.style.transform = "scale(1)";
-              }}
+              className="group p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-indigo-50 hover:border-indigo-100 transition-all cursor-pointer"
             >
-              <div style={{ fontSize: 13, fontWeight: 500 }}>
-                {r.cliente?.nombre_completo || "Sin cliente"}
+              <div className="flex justify-between items-start mb-1">
+                <span className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
+                  {r.cliente?.nombre_completo || "Sin cliente"}
+                </span>
+                <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded uppercase">
+                  {formatearFecha(r.fecha_inicio)}
+                </span>
               </div>
 
-              <div style={{ fontSize: 12, color: "#475569" }}>
-                {r.activo?.nombre || "Activo"}
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <span className="opacity-70">🏢</span>
+                <span className="truncate">{r.activo?.nombre || "Activo"}</span>
               </div>
 
-              <div style={{ fontSize: 12, marginTop: 4, color: "#1e293b" }}>
-                {formatearFecha(r.fecha_inicio)} — {formatearHora(r.fecha_inicio)}
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-400">
+                  Comienza a las:
+                </span>
+                <span className="text-[11px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-sm">
+                  {formatearHora(r.fecha_inicio)}
+                </span>
               </div>
             </div>
           ))}

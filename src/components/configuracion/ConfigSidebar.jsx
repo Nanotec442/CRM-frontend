@@ -1,43 +1,28 @@
-const ConfigSidebar = ({ active, setActive }) => {
-  const items = [
-    { key: "perfil", label: "Perfil" },
-    { key: "empresa", label: "Empresa" },
-    { key: "preferencias", label: "Preferencias" },
-    { key: "seguridad", label: "Seguridad" },
+export default function ConfigSidebar({ active, setActive }) {
+  const menuItems = [
+    { id: "perfil", label: "Perfil de Usuario", icon: "👤" },
+    { id: "empresa", label: "Datos de Empresa", icon: "🏢" },
+    { id: "documentos", label: "Análisis IA", icon: "📄" },
+    { id: "preferencias", label: "Preferencias", icon: "⚙️" },
+    { id: "seguridad", label: "Seguridad", icon: "🔒" },
   ];
 
   return (
-    <div style={sidebar}>
-      {items.map((item) => (
-        <div
-          key={item.key}
-          onClick={() => setActive(item.key)}
-          style={{
-            ...itemStyle,
-            background: active === item.key ? "#1e293b" : "transparent",
-            color: active === item.key ? "#fff" : "#333",
-          }}
+    <nav className="flex flex-col space-y-1">
+      {menuItems.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => setActive(item.id)}
+          className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+            active === item.id
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
         >
+          <span className="text-lg">{item.icon}</span>
           {item.label}
-        </div>
+        </button>
       ))}
-    </div>
+    </nav>
   );
-};
-
-const sidebar = {
-  width: "220px",
-  background: "#fff",
-  borderRadius: "12px",
-  padding: "10px",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-};
-
-const itemStyle = {
-  padding: "10px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  marginBottom: "5px",
-};
-
-export default ConfigSidebar;
+}

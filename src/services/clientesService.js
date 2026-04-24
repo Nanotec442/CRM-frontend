@@ -28,11 +28,15 @@ export const clientesService = {
   },
 
   async modificar(clienteId, formData) {
-    const payload = {
-      nombre_completo: formData.nombre,
-      email: formData.email,
-      telefono: formData.telefono,
-    };
+    const payload = {};
+
+    if (formData.nombre !== undefined) payload.nombre_completo = formData.nombre;
+    if (formData.email !== undefined) payload.email = formData.email;
+    if (formData.telefono !== undefined) payload.telefono = formData.telefono;
+    if (formData.origen !== undefined) payload.origen = formData.origen;
+
+    // NOTA: `estado` ya no se usa aquí para pipeline.
+    // El pipeline se gestiona exclusivamente a través de tarjetasService.
 
     const res = await api.patch(`/crm/clientes/${clienteId}`, payload);
     return res.data;
@@ -46,5 +50,5 @@ export const clientesService = {
   async eliminar(clienteId) {
     const res = await api.delete(`/crm/clientes/${clienteId}`);
     return res.data;
-  }
+  },
 };

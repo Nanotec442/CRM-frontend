@@ -1,5 +1,9 @@
+import React, { useMemo } from "react";
+
 function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo }) {
-  const clientesUnicos = (() => {
+  // Filtramos clientes duplicados usando una clave única (id, email o nombre+telefono)
+  // Se usa useMemo para evitar recalcular esto en cada renderizado si 'clientes' no cambia
+  const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
 
     const seen = new Set();
@@ -14,7 +18,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         c.email ??
         `${c.nombre}-${c.telefono}`;
 
-      if (!key) continue; // ultra defensa
+      if (!key) continue;
 
       if (!seen.has(key)) {
         seen.add(key);
@@ -23,14 +27,15 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
     }
 
     return resultado;
-  })();
+  }, [clientes]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Buscador */}
-      <div className="px-6 py-4 border-b border-gray-100">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden font-sans">
+      
+      {/* --- CABECERA Y BUSCADOR --- */}
+      <div className="px-6 py-4 border-b border-slate-100">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
             🔍
           </span>
           <input
@@ -38,12 +43,13 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
             placeholder="Buscar por nombre, email o empresa..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
           />
           {busqueda && (
             <button
               onClick={() => setBusqueda("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg font-medium transition-colors"
+              title="Limpiar búsqueda"
             >
               ×
             </button>
@@ -51,7 +57,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* --- TABLA DE CLIENTES --- */}
       <div className="overflow-x-auto">
         {loading ? (
           <SkeletonTable />
@@ -60,31 +66,30 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         ) : (
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Contacto
                 </th>
-
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Empresa
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-50">
               {clientesUnicos.map((c) => {
-                const id =
-                  c.id ??
-                  c.cliente_id ??
-                  c.email ??
-                  `${c.nombre}-${c.telefono}`;
+                const id = c.id ?? c.cliente_id ?? c.email ?? `${c.nombre}-${c.telefono}`;
                 const nombreSeguro = c.nombre ?? "Sin nombre";
 
+                // Extraemos las iniciales para el avatar
                 const iniciales = nombreSeguro
                   .split(" ")
                   .slice(0, 2)
@@ -95,42 +100,51 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                 return (
                   <tr
                     key={String(id)}
-                    className="hover:bg-gray-50 transition-colors group"
+                    className="hover:bg-slate-50/80 transition-colors group"
                   >
-                    {/* Nombre + avatar */}
+                    {/* Nombre y Avatar */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
                           {iniciales}
                         </div>
-                        <span className="font-medium text-gray-900">
+                        <span className="font-semibold text-slate-900">
                           {c.nombre}
                         </span>
                       </div>
                     </td>
 
-                    {/* Email + teléfono */}
+                    {/* Información de contacto */}
                     <td className="px-6 py-4">
-                      <div className="space-y-0.5">
-                        <div className="text-gray-700">{c.email}</div>
+                      <div className="space-y-1">
+                        <div className="text-slate-600 font-medium">{c.email}</div>
                         {c.telefono && (
-                          <div className="text-gray-400 text-xs">{c.telefono}</div>
+                          <div className="text-slate-400 text-xs">{c.telefono}</div>
                         )}
                       </div>
                     </td>
 
+                    {/* Empresa */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {c.empresa ? (
+                        <span className="font-medium text-slate-700 flex items-center gap-1.5">
+                          <span className="text-slate-400">🏢</span> {c.empresa}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-xs">Sin empresa</span>
+                      )}
+                    </td>
 
-
-                    {/* Badge estado */}
-                    <td className="px-6 py-4">
+                    {/* Estado del cliente */}
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <EstadoBadge estado={c.estado ?? c.status} />
                     </td>
 
-                    {/* Acciones */}
+                    {/* Botón de edición (Aparece en hover para mantener la tabla limpia) */}
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => onEditar(c)}
-                        className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all opacity-0 group-hover:opacity-100"
+                        className="text-xs font-medium text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                       >
                         Editar
                       </button>
@@ -143,9 +157,9 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         )}
       </div>
 
-      {/* Footer con conteo */}
+      {/* --- PIE DE TABLA (Contador de resultados) --- */}
       {!loading && clientesUnicos.length > 0 && (
-        <div className="px-6 py-3 border-t border-gray-100 text-xs text-gray-400">
+        <div className="px-6 py-3.5 border-t border-slate-100 text-xs font-medium text-slate-500 bg-slate-50/30">
           {clientesUnicos.length} resultado{clientesUnicos.length !== 1 ? "s" : ""}
           {busqueda && ` para "${busqueda}"`}
         </div>
@@ -154,56 +168,63 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
   );
 }
 
+// --- COMPONENTES AUXILIARES ---
+
+// Renderiza un badge visual dependiendo del estado del cliente
 function EstadoBadge({ estado }) {
   const map = {
-    activo: { label: "Activo", cls: "bg-green-50 text-green-700 border-green-200" },
-    inactivo: { label: "Inactivo", cls: "bg-gray-100 text-gray-500 border-gray-200" },
-    prospecto: { label: "Prospecto", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-    activa: { label: "Activo", cls: "bg-green-50 text-green-700 border-green-200" },
+    activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    activa: { label: "Activo", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    inactivo: { label: "Inactivo", cls: "bg-slate-100 text-slate-600 border-slate-200" },
+    prospecto: { label: "Prospecto", cls: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   };
+  
   const key = (estado ?? "activo").toLowerCase();
   const { label, cls } = map[key] ?? map["activo"];
+  
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${cls}`}>
       {label}
     </span>
   );
 }
 
+// Vista de carga mientras se obtienen los datos de la API
 function SkeletonTable() {
   return (
-    <div className="divide-y divide-gray-50">
+    <div className="divide-y divide-slate-50">
       {[...Array(5)].map((_, i) => (
         <div key={i} className="px-6 py-4 flex items-center gap-4 animate-pulse">
-          <div className="w-8 h-8 bg-gray-200 rounded-full shrink-0" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 bg-gray-200 rounded w-1/3" />
-            <div className="h-3 bg-gray-100 rounded w-1/4" />
+          <div className="w-9 h-9 bg-slate-200 rounded-lg shrink-0" />
+          <div className="flex-1 space-y-2.5">
+            <div className="h-3 bg-slate-200 rounded w-1/3" />
+            <div className="h-2.5 bg-slate-100 rounded w-1/4" />
           </div>
-          <div className="h-3 bg-gray-100 rounded w-1/4" />
-          <div className="h-5 bg-gray-100 rounded-full w-16" />
+          <div className="h-2.5 bg-slate-100 rounded w-1/4" />
+          <div className="h-6 bg-slate-100 rounded-md w-16" />
         </div>
       ))}
     </div>
   );
 }
 
+// Mensaje mostrado cuando la tabla está vacía o la búsqueda no arroja resultados
 function EmptyState({ busqueda, onNuevo }) {
   return (
-    <div className="py-16 text-center text-gray-400">
-      <div className="text-4xl mb-3">👥</div>
+    <div className="py-20 text-center flex flex-col items-center justify-center">
+      <div className="text-4xl mb-4 opacity-50">👥</div>
       {busqueda ? (
         <>
-          <p className="font-medium text-gray-500">Sin resultados para "{busqueda}"</p>
-          <p className="text-sm mt-1">Intenta con otro nombre, email o empresa.</p>
+          <p className="text-base font-semibold text-slate-800">Sin resultados para "{busqueda}"</p>
+          <p className="text-sm text-slate-500 mt-1">Intenta con otro nombre, email o empresa.</p>
         </>
       ) : (
         <>
-          <p className="font-medium text-gray-500">Aún no hay clientes</p>
-          <p className="text-sm mt-1 mb-4">Agrega el primero para comenzar.</p>
+          <p className="text-base font-semibold text-slate-800">Aún no hay clientes</p>
+          <p className="text-sm text-slate-500 mt-1 mb-5">Agrega el primero para comenzar a gestionar tu cartera.</p>
           <button
             onClick={onNuevo}
-            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="text-sm font-medium bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
           >
             + Nuevo cliente
           </button>

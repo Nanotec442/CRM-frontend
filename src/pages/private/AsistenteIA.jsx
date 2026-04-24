@@ -1,35 +1,30 @@
 import { useState, useRef, useEffect } from "react";
 
+/**
+ * Asistente de IA (Copiloto) de PIVOT.
+ * Interfaz de chat interactiva para consultas sobre la base de datos y procesamiento de documentos.
+ */
 const AsistenteIA = () => {
-  // Estado para el texto del input
   const [inputTexto, setInputTexto] = useState("");
-  
-  // Estado para almacenar los mensajes del chat
   const [mensajes, setMensajes] = useState([
     {
       id: 1,
       rol: "ia",
-      texto: "¡Hola, Daniel! Soy el asistente de IA de PIVOT 360LAB. Puedo ayudarte a gestionar reservas, consultar disponibilidad de activos o analizar documentos de clientes. ¿En qué te ayudo hoy?",
+      texto: "¡Hola, Daniel! Soy el asistente de IA de PIVOT. Puedo ayudarte a gestionar reservas, consultar disponibilidad de activos o analizar documentos de clientes. ¿En qué te ayudo hoy?",
       hora: new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
 
-  // Estado temporal para simular que la IA está "escribiendo"
   const [iaEscribiendo, setIaEscribiendo] = useState(false);
-  
-  // Referencia para hacer auto-scroll al final del chat
   const mensajesEndRef = useRef(null);
 
-  // Auto-scroll al fondo cada vez que cambian los mensajes
   useEffect(() => {
     mensajesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
 
-  // Función para manejar el envío de mensajes
   const enviarMensaje = (texto) => {
     if (!texto.trim()) return;
 
-    // 1. Agregar el mensaje del usuario al chat
     const nuevoMensajeUsuario = {
       id: Date.now(),
       rol: "usuario",
@@ -41,93 +36,87 @@ const AsistenteIA = () => {
     setInputTexto("");
     setIaEscribiendo(true);
 
-    // 2. Simular respuesta de la IA (Esto lo cambiarás por tu llamada a FastAPI después)
+    // Simulación de respuesta (Pendiente conexión con FastAPI/Gemini)
     setTimeout(() => {
       const respuestaIA = {
         id: Date.now() + 1,
         rol: "ia",
-        texto: "En este momento estoy en versión de demostración. Pronto podré conectarme a tu base de datos para responder esta consulta real. ¡Sigue desarrollando PIVOT 360LAB!",
+        texto: "Entendido. Estoy procesando tu consulta técnica sobre PIVOT. Actualmente estoy en fase de demostración, pero pronto podré ejecutar acciones directamente en tu base de datos.",
         hora: new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }),
       };
       setMensajes((prev) => [...prev, respuestaIA]);
       setIaEscribiendo(false);
-    }, 1500); // Simula 1.5 segundos de "pensamiento"
+    }, 1500);
   };
 
-  // Sugerencias de preguntas para que el panel no se vea vacío
   const sugerencias = [
     "¿Qué activos están disponibles hoy?",
-    "Muéstrame las reservas canceladas.",
-    "¿Cómo extraigo datos de un carnet?",
-    "Resumen de clientes de esta semana.",
+    "Muéstrame las reservas pendientes.",
+    "Extraer datos de identificación.",
+    "Resumen de actividad semanal.",
   ];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto h-[calc(100vh-100px)] flex flex-col">
-      {/* Header del Asistente */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="bg-blue-600 text-white p-3 rounded-xl shadow-md">
+    <div className="space-y-6 font-sans h-[calc(100vh-140px)] flex flex-col">
+      {/* Encabezado */}
+      <section className="flex items-center gap-4">
+        <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-lg shadow-slate-200">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Asistente IA (Copiloto)</h1>
-          <p className="text-sm text-slate-500">Conectado a la base de conocimiento de PIVOT</p>
+          <h1 className="text-3xl font-bold text-slate-900">Asistente IA</h1>
+          <p className="text-slate-600">Copiloto inteligente conectado a PIVOT.</p>
         </div>
-      </div>
+      </section>
 
-      {/* Contenedor Principal del Chat */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+      {/* Contenedor del Chat */}
+      <main className="flex-1 bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 overflow-hidden flex flex-col">
         
-        {/* Área de Mensajes (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
-          
-          {/* Mapeo de Mensajes */}
+        {/* Área de Conversación */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
           {mensajes.map((msg) => (
             <div
               key={msg.id}
               className={`flex flex-col ${msg.rol === "usuario" ? "items-end" : "items-start"}`}
             >
               <div
-                className={`max-w-[75%] px-5 py-3 rounded-2xl ${
+                className={`max-w-[80%] px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
                   msg.rol === "usuario"
-                    ? "bg-slate-800 text-white rounded-tr-sm"
-                    : "bg-white text-slate-700 border border-gray-200 shadow-sm rounded-tl-sm"
+                    ? "bg-slate-900 text-white rounded-tr-none"
+                    : "bg-white text-slate-700 border border-slate-200 rounded-tl-none"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{msg.texto}</p>
+                {msg.texto}
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 mx-1">{msg.hora}</span>
+              <span className="text-[10px] font-medium text-slate-400 mt-1.5 px-1 uppercase tracking-wider">
+                {msg.hora}
+              </span>
             </div>
           ))}
 
-          {/* Indicador de "IA Escribiendo..." */}
           {iaEscribiendo && (
             <div className="flex items-start">
-              <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex gap-1">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }}></div>
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }}></div>
+              <div className="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1.5 items-center">
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
               </div>
             </div>
           )}
-          
-          {/* Referencia invisible para el auto-scroll */}
           <div ref={mensajesEndRef} />
         </div>
 
-        {/* Área Inferior (Sugerencias y Barra de Entrada) */}
-        <div className="p-4 bg-white border-t border-gray-100">
-          
-          {/* Tarjetas de Sugerencias (Solo se muestran si hay pocos mensajes) */}
+        {/* Input y Acciones */}
+        <footer className="p-6 bg-white border-t border-slate-100">
           {mensajes.length <= 2 && (
-            <div className="flex flex-wrap gap-2 mb-4 justify-center">
+            <div className="flex flex-wrap gap-2 mb-6">
               {sugerencias.map((sug, index) => (
                 <button
                   key={index}
                   onClick={() => enviarMensaje(sug)}
-                  className="text-xs bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 hover:border-blue-200 px-3 py-1.5 rounded-full transition-colors"
+                  className="text-xs font-medium bg-white hover:bg-slate-900 hover:text-white text-slate-600 border border-slate-200 rounded-xl px-4 py-2 transition-all active:scale-95"
                 >
                   {sug}
                 </button>
@@ -135,44 +124,40 @@ const AsistenteIA = () => {
             </div>
           )}
 
-          {/* Formulario de Entrada */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               enviarMensaje(inputTexto);
             }}
-            className="flex gap-3"
+            className="relative flex items-center"
           >
             <input
               type="text"
               value={inputTexto}
               onChange={(e) => setInputTexto(e.target.value)}
-              placeholder="Haz una pregunta o pide que redacte un contrato..."
-              className="flex-1 px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm"
+              placeholder="Haz una consulta sobre el negocio..."
+              className="w-full pl-5 pr-16 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white outline-none transition-all text-sm"
               disabled={iaEscribiendo}
             />
             <button
               type="submit"
               disabled={!inputTexto.trim() || iaEscribiendo}
-              className={`px-5 py-3 rounded-xl flex items-center justify-center transition-all ${
+              className={`absolute right-2 p-2.5 rounded-xl transition-all ${
                 inputTexto.trim() && !iaEscribiendo
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  ? "bg-slate-900 text-white shadow-md hover:scale-105"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
               }`}
             >
-              <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
             </button>
           </form>
-          <div className="text-center mt-2">
-             <span className="text-[10px] text-gray-400">
-               La IA puede cometer errores. Verifica la información antes de tomar decisiones operativas.
-             </span>
-          </div>
-        </div>
-
-      </div>
+          <p className="text-center mt-4 text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+            Pivot Intelligence Unit • 2026
+          </p>
+        </footer>
+      </main>
     </div>
   );
 };

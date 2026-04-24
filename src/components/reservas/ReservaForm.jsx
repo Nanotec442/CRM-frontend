@@ -3,13 +3,16 @@ import { reservasService } from "../../services/reservasService";
 import { clientesService } from "../../services/clientesService";
 import { useActivo } from "../../hooks/useActivo";
 
+/**
+ * Formulario de creación de reservas.
+ * Implementa lógica de auto-ajuste de tiempo (UX) y normalización de fechas para datetime-local.
+ */
 const ReservaForm = ({ onSuccess }) => {
   const { activos, loading: loadingActivos, fetchActivos } = useActivo();
   
   const [clientes, setClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
 
-  // Ahora el estado maneja inicio y fin de forma independiente
   const [form, setForm] = useState({
     cliente_id: "",
     activo_id: "",
@@ -26,7 +29,6 @@ const ReservaForm = ({ onSuccess }) => {
     setLoadingClientes(true);
     try {
       const data = await clientesService.listar();
-      // Prevención por si la API devuelve un objeto en lugar del arreglo directo
       const dataReal = Array.isArray(data) ? data : (data.clientes || []);
       setClientes(dataReal);
     } catch (error) {
@@ -36,13 +38,13 @@ const ReservaForm = ({ onSuccess }) => {
     }
   };
 
-  // Función para calcular X horas después de una fecha
+  /**
+   * Calcula una fecha de finalización sugerida (1 hora después) para mejorar la UX.
+   */
   const calcularFechaFin = (fechaIsoString, horas = 1) => {
     if (!fechaIsoString) return "";
     const date = new Date(fechaIsoString);
     date.setHours(date.getHours() + horas);
-    // Para que el input type="datetime-local" lo lea bien, hay que quitarle la 'Z' del final 
-    // y dejarlo en formato YYYY-MM-DDTHH:mm
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   };
 
@@ -51,7 +53,6 @@ const ReservaForm = ({ onSuccess }) => {
     setForm({
       ...form,
       fecha_inicio: nuevaFechaInicio,
-      // Magia UX: Si cambio el inicio, el fin se auto-ajusta a 1 hora después por comodidad
       fecha_fin: calcularFechaFin(nuevaFechaInicio, 1),
     });
   };
@@ -65,12 +66,7 @@ const ReservaForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      if (!form.cliente_id) return alert("Por favor, selecciona un cliente.");
-      if (!form.activo_id) return alert("Por favor, selecciona un activo.");
-      if (!form.fecha_inicio || !form.fecha_fin) return alert("Por favor, selecciona las fechas.");
-
       const inicio = new Date(form.fecha_inicio);
       const fin = new Date(form.fecha_fin);
 
@@ -87,7 +83,6 @@ const ReservaForm = ({ onSuccess }) => {
 
       await reservasService.crear(payload);
 
-      // Limpiamos el formulario
       setForm({
         cliente_id: "",
         activo_id: "",
@@ -98,35 +93,25 @@ const ReservaForm = ({ onSuccess }) => {
       if (onSuccess) onSuccess();
 
     } catch (error) {
-      console.error("Error backend:", error.response?.data);
       const errorMsg = error.response?.data?.detail || "Error creando reserva";
       alert(`Error: ${errorMsg}`);
     }
   };
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full"
-    >
-      <div className="flex items-center gap-2 mb-6">
-        <span className="bg-blue-100 text-blue-600 p-2 rounded-lg">
-          📅
-        </span>
-        <h2 className="text-xl font-bold text-slate-800">Nueva Reserva</h2>
-      </div>
+  const inputClasses = "mt-1.5 w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-slate-700";
+  const labelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1";
 
-      {/* CLIENTE */}
-      <div className="mb-4">
-        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-          Cliente
-        </label>
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Selector: Cliente */}
+      <div>
+        <label className={labelClasses}>Cliente Responsable</label>
         <select
           name="cliente_id"
           value={form.cliente_id}
           onChange={handleChange}
           required
-          className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 hover:bg-white transition-all outline-none text-sm text-slate-700"
+          className={inputClasses}
         >
           <option value="">
             {loadingClientes ? "Cargando clientes..." : "Seleccionar cliente"}
@@ -139,20 +124,18 @@ const ReservaForm = ({ onSuccess }) => {
         </select>
       </div>
 
-      {/* ACTIVO */}
-      <div className="mb-5">
-        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-          Activo / Recurso
-        </label>
+      {/* Selector: Activo */}
+      <div>
+        <label className={labelClasses}>Activo / Recurso</label>
         <select
           name="activo_id"
           value={form.activo_id}
           onChange={handleChange}
           required
-          className="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 hover:bg-white transition-all outline-none text-sm text-slate-700"
+          className={inputClasses}
         >
           <option value="">
-            {loadingActivos ? "Cargando activos..." : "Seleccionar activo"}
+            {loadingActivos ? "Cargando activos..." : "Seleccionar recurso"}
           </option>
           {activos.map((a) => (
             <option key={a.id} value={a.id}>
@@ -162,46 +145,43 @@ const ReservaForm = ({ onSuccess }) => {
         </select>
       </div>
 
-      {/* RANGO DE FECHAS (Lado a lado) */}
-      <div className="grid grid-cols-2 gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+      {/* Rango de Fechas Técnico */}
+      <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
         <div>
-          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">
-            Inicio
-          </label>
+          <label className={labelClasses}>Inicio</label>
           <input
             type="datetime-local"
             name="fecha_inicio"
             value={form.fecha_inicio}
             onChange={handleInicioChange}
             required
-            className="w-full p-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-700 outline-none transition-all cursor-pointer bg-white"
+            className={inputClasses}
           />
         </div>
         
         <div>
-          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">
-            Fin
-          </label>
+          <label className={labelClasses}>Término</label>
           <input
             type="datetime-local"
             name="fecha_fin"
             value={form.fecha_fin}
             onChange={handleChange}
             required
-            // Evitamos que elijan una fecha de fin menor a la de inicio en el calendario
             min={form.fecha_inicio} 
-            className="w-full p-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-700 outline-none transition-all cursor-pointer bg-white"
+            className={inputClasses}
           />
         </div>
       </div>
 
-      {/* BOTÓN */}
-      <button
-        type="submit"
-        className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-transform hover:-translate-y-0.5 shadow-md cursor-pointer"
-      >
-        Confirmar Reserva
-      </button>
+      {/* Acción Principal */}
+      <div className="pt-2">
+        <button
+          type="submit"
+          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-slate-200"
+        >
+          Confirmar Reserva
+        </button>
+      </div>
     </form>
   );
 };

@@ -1,7 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 
 function Sidebar() {
-
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -15,11 +14,10 @@ function Sidebar() {
   const linkInactive = "text-slate-300 hover:bg-slate-800 hover:text-white";
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-950 text-white p-4">
+    <aside className="w-64 shrink-0 flex flex-col h-full bg-slate-950 text-white p-4">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold">CRM PIVOT 360LAB</h2>
-        <p className="text-sm text-slate-400 mt-1">Panel administrativo</p>
-
+        <h2 className="text-3xl font-bold">CRM PIVOT</h2>
+        <p className="text-sm text-slate-400 mt-1 mb-8">Panel administrativo</p>
 
         <nav className="space-y-2">
           <NavLink
@@ -40,6 +38,7 @@ function Sidebar() {
           >
             Clientes
           </NavLink>
+          
           <NavLink
             to="/panel/activos"
             className={({ isActive }) =>
@@ -57,7 +56,6 @@ function Sidebar() {
           >
             Reservas
           </NavLink>
-
 
           <NavLink
             to="/panel/reportes"
@@ -91,7 +89,7 @@ function Sidebar() {
       <div className="mt-auto pt-6">
         <button
           onClick={handleLogout}
-          className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700"
+          className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700 transition-colors"
         >
           Cerrar sesión
         </button>

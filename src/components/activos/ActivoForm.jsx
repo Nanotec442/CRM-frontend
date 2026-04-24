@@ -1,12 +1,16 @@
 import { useState } from "react";
 
+/**
+ * Formulario de creación de activos.
+ * Rediseñado para coincidir exactamente con la estructura de ReservaForm.
+ */
 const ActivoForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
     nombre: "",
     tipo: "",
     precio_base: "",
     tiempo_buffer_minutos: "",
-    estado: "disponible",
+    estado: "Operativo",
   });
 
   const handleChange = (e) => {
@@ -32,110 +36,93 @@ const ActivoForm = ({ onSubmit }) => {
       tipo: "",
       precio_base: "",
       tiempo_buffer_minutos: "",
-      estado: "disponible",
+      estado: "operativo",
     });
   };
 
+  // Clases compartidas para consistencia total
+  const inputClasses = "mt-1.5 w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-slate-700";
+  const labelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 mb-6"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-slate-800">
-        Crear Activo
-      </h2>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Campo principal: Nombre */}
+      <div>
+        <label className={labelClasses}>Nombre del Activo</label>
+        <input
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          placeholder="Ej: Sala 1, Retroexcavadora..."
+          required
+          className={inputClasses}
+        />
+      </div>
 
-      {/* GRID PRINCIPAL */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        
-        {/* Nombre */}
-        <div className="col-span-2">
-          <label className="text-sm font-medium text-slate-600">
-            Nombre del Activo
-          </label>
-          <input
-            name="nombre"
-            value={form.nombre}
-            onChange={handleChange}
-            placeholder="Ej: Sala 1, Retroexcavadora..."
-            required
-            className="mt-1 w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 outline-none"
-          />
-        </div>
+      {/* Campo principal: Tipo */}
+      <div>
+        <label className={labelClasses}>Categoría / Tipo</label>
+        <input
+          name="tipo"
+          value={form.tipo}
+          onChange={handleChange}
+          placeholder="Ej: Vehículo, Espacio Físico"
+          required
+          className={inputClasses}
+        />
+      </div>
 
-        {/* Tipo */}
+      {/* BLOQUE TÉCNICO: Configuración secundaria (Igual al rango de fechas en Reservas) */}
+      <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
         <div>
-          <label className="text-sm font-medium text-slate-600">
-            Tipo
-          </label>
-          <input
-            name="tipo"
-            value={form.tipo}
-            onChange={handleChange}
-            placeholder="Ej: Sala, Vehículo"
-            required
-            className="mt-1 w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 outline-none"
-          />
-        </div>
-
-        {/* Estado */}
-        <div>
-          <label className="text-sm font-medium text-slate-600">
-            Estado
-          </label>
+          <label className={labelClasses}>Estado</label>
           <select
             name="estado"
             value={form.estado}
             onChange={handleChange}
-            className="mt-1 w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 outline-none"
+            className={inputClasses}
           >
-            <option value="disponible">Disponible</option>
+            <option value="operativo">Operativo</option>
             <option value="mantenimiento">Mantenimiento</option>
             <option value="fuera_servicio">Fuera de servicio</option>
           </select>
         </div>
 
-        {/* Precio */}
         <div>
-          <label className="text-sm font-medium text-slate-600">
-            Precio Base
-          </label>
-          <input
-            name="precio_base"
-            type="number"
-            min="0"
-            value={form.precio_base}
-            onChange={handleChange}
-            placeholder="$"
-            required
-            className="mt-1 w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 outline-none"
-          />
-        </div>
-
-        {/* Buffer */}
-        <div>
-          <label className="text-sm font-medium text-slate-600">
-            Buffer (min)
-          </label>
+          <label className={labelClasses}>Buffer (min)</label>
           <input
             name="tiempo_buffer_minutos"
             type="number"
             min="0"
             value={form.tiempo_buffer_minutos}
             onChange={handleChange}
-            placeholder="Ej: 15"
-            className="mt-1 w-full p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-500 outline-none"
+            placeholder="15"
+            className={inputClasses}
+          />
+        </div>
+
+        <div className="col-span-2">
+          <label className={labelClasses}>Precio Base por Uso ($)</label>
+          <input
+            name="precio_base"
+            type="number"
+            min="0"
+            value={form.precio_base}
+            onChange={handleChange}
+            placeholder="0"
+            required
+            className={inputClasses}
           />
         </div>
       </div>
 
-      {/* BOTÓN */}
-      <div className="mt-6 flex justify-end">
+      {/* Botón de Acción Principal */}
+      <div className="pt-2">
         <button
           type="submit"
-          className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition shadow-md"
+          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-slate-200"
         >
-          Crear Activo
+          Registrar Activo
         </button>
       </div>
     </form>
