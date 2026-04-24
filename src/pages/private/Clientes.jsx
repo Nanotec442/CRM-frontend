@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import ClienteForm from "../../components/clientes/ClienteForm";
 import ClienteList from "./../../components/clientes/ClienteList";
 import PipelineClientes from "../../components/clientes/PipelineClientes";
-// 1. Importamos la nueva vista que creamos
 import NuevoClienteVista from "../../components/clientes/NuevoClienteVista";
 import { clientesService } from "../../services/clientesService";
 

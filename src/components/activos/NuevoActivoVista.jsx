@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Package, Tag, Activity, FileText, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, UploadCloud, HelpCircle, Barcode } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import api from "../../services/api";
 
 function NuevoActivoVista({ onGuardar, onVolver }) {
   // --- ESTADOS DEL FORMULARIO ---

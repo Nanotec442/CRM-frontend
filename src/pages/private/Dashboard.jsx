@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { clientesService } from "../../services/clientesService";
 import { reservasService } from "../../services/reservasService";
-// IMPORTACIÓN CORRECTA: Sin llaves porque usas 'export default'
 import activosService from "../../services/activosService";
 
 function Dashboard() {

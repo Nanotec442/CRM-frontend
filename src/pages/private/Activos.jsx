@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useActivo } from "../../hooks/useActivo";
 import ActivoForm from "../../components/activos/ActivoForm";
 import ActivoList from "../../components/activos/ActivoList";
-// Importamos la nueva vista
 import NuevoActivoVista from "../../components/activos/NuevoActivoVista";
 
 const Activos = () => {

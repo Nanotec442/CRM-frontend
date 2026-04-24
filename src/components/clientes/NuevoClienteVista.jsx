@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { User, Mail, Phone, Fingerprint, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, FileText, HelpCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import api from "../../services/api";
 
 function NuevoClienteVista({ onGuardar, onVolver }) {
   // --- ESTADOS DEL FORMULARIO ---
