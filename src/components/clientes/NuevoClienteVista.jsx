@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { User, Mail, Phone, Fingerprint, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, FileText, HelpCircle } from 'lucide-react';
+import { toast } from 'react-toastify'; // Agregamos toastify para las alertas
 
+// Usamos tu módulo de Axios centralizado
 import api from "../../services/api";
 
 function NuevoClienteVista({ onGuardar, onVolver }) {
@@ -17,7 +19,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [mostrarAlerta, setMostrarAlerta] = useState(false);
   const inputRef = useRef(null);
 
   // --- MANEJADORES DE ARCHIVOS ---
@@ -44,11 +45,12 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
     }
   };
 
-  // --- LÓGICA DE API (Carga Inteligente) ---
+  // --- LÓGICA DE API (Carga Inteligente CON AXIOS) ---
   const procesarArchivoIA = async (file) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       setError("El archivo excede el límite de 10MB permitido.");
+      toast.error("El archivo excede el límite de 10MB permitido.");
       return;
     }
 
@@ -59,26 +61,10 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
     payload.append('archivo', file); // Clave exacta que pide FastAPI
 
     try {
-      const token = localStorage.getItem("token"); 
+      // ✅ AQUÍ ESTÁ LA MAGIA: Axios hace el trabajo pesado y pone el token solo
+      const response = await api.post('/clientes/carga-inteligente', payload);
       
-      const response = await fetch(`${API_URL}/clientes/carga-inteligente`, {
-        method: 'POST',
-        body: payload,
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        if (response.status === 401 || response.status === 403) {
-           throw new Error("Sesión inválida. Inicia sesión nuevamente.");
-        }
-        const errorMessage = errorData?.detail 
-          ? JSON.stringify(errorData.detail)
-          : `Error del servidor: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
+      const data = response.data; // Axios ya parseó el JSON
       
       // Mapeo de datos extraídos al formulario
       if (data.datos && data.datos.clientes && data.datos.clientes.length > 0) {
@@ -92,13 +78,24 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
           empresa: info.empresa || prev.empresa
         }));
 
-        setMostrarAlerta(true);
-        setTimeout(() => setMostrarAlerta(false), 5000);
+        toast.success("¡Datos del cliente extraídos con éxito!");
       }
 
     } catch (err) {
       console.error("Error en IA:", err);
-      setError(err.message || "Ocurrió un error al procesar el documento.");
+      
+      // Manejo de errores adaptado a Axios
+      if (err.response) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          toast.error("Sesión inválida. Inicia sesión nuevamente.");
+        } else {
+          const errMsg = err.response.data?.detail || "Error al procesar el documento.";
+          setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+          toast.error("La IA no pudo procesar este documento.");
+        }
+      } else {
+        toast.error("Error de conexión. Revisa tu internet.");
+      }
     } finally {
       setIsProcessing(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -212,15 +209,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
         {/* --- COLUMNA DERECHA: Confirmación de Datos (3/5) --- */}
         <div className="lg:col-span-3 relative">
           
-          {mostrarAlerta && (
-            <div className="absolute -top-12 left-0 right-0 flex justify-center z-10">
-              <div className="bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg animate-in slide-in-from-top-4">
-                <CheckCircle size={16} />
-                DATOS EXTRAÍDOS CON ÉXITO
-              </div>
-            </div>
-          )}
-
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             
             {/* HEADER FORMULARIO */}
@@ -316,6 +304,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                   onClick={() => {
                     if(!formData.nombre_completo) {
                        setError("El nombre del cliente es obligatorio.");
+                       toast.error("El nombre del cliente es obligatorio.");
                        return;
                     }
                     onGuardar({

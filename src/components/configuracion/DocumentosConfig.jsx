@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { FileText, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { toast } from 'react-toastify'; // Agregamos toastify por si se cae la red
 
+// Importamos la instancia centralizada de Axios
 import api from "../../services/api";
 
 const DocumentosConfig = ({ onAIComplete }) => {
@@ -35,7 +37,7 @@ const DocumentosConfig = ({ onAIComplete }) => {
     }
   };
 
-  // --- LÓGICA DE PROCESAMIENTO Y CONEXIÓN AL BACKEND ---
+  // --- LÓGICA DE PROCESAMIENTO CON AXIOS ---
   const procesarArchivo = async (file) => {
     // 1. Validación de tamaño (Máx 10MB)
     const maxSize = 10 * 1024 * 1024;
@@ -53,32 +55,11 @@ const DocumentosConfig = ({ onAIComplete }) => {
     formData.append('archivo', file); 
 
     try {
-      const token = localStorage.getItem("token"); 
-      
-      // 3. Petición al endpoint mixto (Extractor universal)
-      const response = await fetch(`${API_URL}/documentos/carga-mixta`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}` 
-        }
-      });
+      // ✅ 3. Petición limpia usando Axios. El token viaja solo.
+      const response = await api.post('/documentos/carga-mixta', formData);
 
-      // 4. Manejo de errores HTTP
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        if (response.status === 401 || response.status === 403) {
-           throw new Error("Sesión inválida. Por favor, vuelve a iniciar sesión.");
-        }
-        const errorMessage = errorData?.detail 
-          ? JSON.stringify(errorData.detail)
-          : `Error del servidor: ${response.status}`;
-          
-        throw new Error(errorMessage);
-      }
-
-      // 5. Éxito: Envío de datos extraídos al componente padre
-      const data = await response.json();
+      // 4. Éxito: Extraemos datos y notificamos al padre
+      const data = response.data;
       setSuccessMsg(`Documento analizado correctamente. ${data.mensaje || ''}`);
       
       if (onAIComplete) {
@@ -87,7 +68,20 @@ const DocumentosConfig = ({ onAIComplete }) => {
 
     } catch (err) {
       console.error("Error procesando documento:", err);
-      setError(err.message || "Ocurrió un error de conexión al procesar el documento.");
+      
+      // ✅ 5. Manejo de errores estilo Axios
+      if (err.response) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          setError("Sesión inválida. Por favor, vuelve a iniciar sesión.");
+          toast.error("Tu sesión expiró.");
+        } else {
+          const errMsg = err.response.data?.detail || "Error del servidor al procesar el documento.";
+          setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+        }
+      } else {
+        setError("Error de conexión. Revisa tu internet.");
+        toast.error("Fallo de red.");
+      }
     } finally {
       setIsProcessing(false);
       // Limpiamos el input para permitir subir el mismo archivo en caso de error
@@ -113,7 +107,7 @@ const DocumentosConfig = ({ onAIComplete }) => {
 
       {/* Zona Drag & Drop */}
       <div 
-        className={`relative group border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-50
+        className={`relative group border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-[200px]
           ${dragActive ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300'}
           ${isProcessing ? 'opacity-70 pointer-events-none' : ''}`}
         onDragEnter={handleDrag}
@@ -146,16 +140,16 @@ const DocumentosConfig = ({ onAIComplete }) => {
         )}
       </div>
 
-      {/* Alertas de Feedback */}
+      {/* Alertas de Feedback (UI Integrada) */}
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-rose-600 bg-rose-50 p-3 rounded-lg text-xs font-medium">
+        <div className="mt-4 flex items-center gap-2 text-rose-600 bg-rose-50 p-3 rounded-lg text-xs font-medium animate-in fade-in">
           <AlertCircle size={16} className="shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
       {successMsg && !error && (
-        <div className="mt-4 flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg text-xs font-medium">
+        <div className="mt-4 flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg text-xs font-medium animate-in fade-in">
           <CheckCircle size={16} className="shrink-0" />
           <p>{successMsg}</p>
         </div>

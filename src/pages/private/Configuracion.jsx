@@ -142,7 +142,7 @@ const Configuracion = () => {
 };
 
 /**
- * Componente de Carga de IA (Diseño Premium)
+ * Componente de Carga de IA 
  */
 const ProcessingLoader = () => (
   <div className="flex flex-col items-center justify-center h-full min-h-87.5 bg-indigo-50/50 rounded-xl border border-dashed border-indigo-100 animate-in fade-in duration-500">

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Package, Tag, Activity, FileText, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, UploadCloud, HelpCircle, Barcode } from 'lucide-react';
+import { toast } from 'react-toastify'; // Agregamos las notificaciones elegantes
 
 import api from "../../services/api";
 
@@ -17,7 +18,6 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [mostrarAlerta, setMostrarAlerta] = useState(false);
   const inputRef = useRef(null);
 
   // --- MANEJADORES DE ARCHIVOS ---
@@ -44,11 +44,12 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     }
   };
 
-  // --- LÓGICA DE API (Carga Inteligente de Activos) ---
+  // --- LÓGICA DE API CON AXIOS (Carga Inteligente de Activos) ---
   const procesarArchivoIA = async (file) => {
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       setError("El archivo excede el límite de 10MB permitido.");
+      toast.error("El archivo excede el límite de 10MB permitido.");
       return;
     }
 
@@ -59,29 +60,10 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     payload.append('archivo', file);
 
     try {
-      const token = localStorage.getItem("token"); 
+      // ✅ Axios inyecta el token y hace la petición limpiamente
+      const response = await api.post('/activos/carga-inteligente', payload);
+      const data = response.data;
       
-      // APUNTAMOS AL ENDPOINT DE ACTIVOS
-      const response = await fetch(`${API_URL}/activos/carga-inteligente`, {
-        method: 'POST',
-        body: payload,
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        if (response.status === 401 || response.status === 403) {
-           throw new Error("Sesión inválida. Inicia sesión nuevamente.");
-        }
-        const errorMessage = errorData?.detail 
-          ? JSON.stringify(errorData.detail)
-          : `Error del servidor: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      
-
       if (data.datos && data.datos.activos && data.datos.activos.length > 0) {
         const info = data.datos.activos[0];
         setFormData(prev => ({
@@ -89,17 +71,28 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
           nombre: info.nombre || prev.nombre,
           tipo: info.tipo || prev.tipo,
           estado: info.estado || prev.estado,
-          numero_serie: info.numero_serie || prev.numero_serie,
-          notas: info.notas || prev.notas
+          tiempo_buffer_minutos: info.tiempo_buffer_minutos || prev.tiempo_buffer_minutos,
+          precio_base: info.precio_base || prev.precio_base
         }));
 
-        setMostrarAlerta(true);
-        setTimeout(() => setMostrarAlerta(false), 5000);
+        toast.success("¡Datos del activo extraídos con éxito!");
       }
 
     } catch (err) {
       console.error("Error en IA:", err);
-      setError(err.message || "Ocurrió un error al procesar el documento.");
+      
+      // ✅ Manejo de errores estilo Axios
+      if (err.response) {
+        if (err.response.status === 401 || err.response.status === 403) {
+          toast.error("Sesión inválida. Inicia sesión nuevamente.");
+        } else {
+          const errMsg = err.response.data?.detail || "Error al procesar el documento.";
+          setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+          toast.error("La IA no pudo procesar este documento.");
+        }
+      } else {
+        toast.error("Error de conexión. Revisa tu internet.");
+      }
     } finally {
       setIsProcessing(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -196,7 +189,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
               Extracción de Activos
             </h4>
             <p className="text-indigo-800/80 text-xs mt-2.5 leading-relaxed font-medium">
-              Sube la orden de compra o la hoja de especificaciones. Gemini identificará el tipo de recurso, modelo y número de serie para agilizar tu inventario.
+              Sube la orden de compra o la hoja de especificaciones. Gemini identificará el tipo de recurso, modelo y características para agilizar tu inventario.
             </p>
           </div>
         </div>
@@ -204,15 +197,6 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
         {/* --- COLUMNA DERECHA: Formulario (3/5) --- */}
         <div className="lg:col-span-3 relative">
           
-          {mostrarAlerta && (
-            <div className="absolute -top-12 left-0 right-0 flex justify-center z-10">
-              <div className="bg-emerald-600 text-white px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg animate-in slide-in-from-top-4">
-                <CheckCircle size={16} />
-                ACTIVO DETECTADO Y RELLENADO
-              </div>
-            </div>
-          )}
-
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
@@ -266,9 +250,9 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                       onChange={handleInputChange}
                       className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-700 text-sm appearance-none bg-white"
                     >
-                      <option value="operativo">Operativo</option>
-                      <option value="mantenimiento">Mantenimiento</option>
-                      <option value="fuera_servicio">Fuera de servicio</option>
+                      <option value="Operativo">Operativo</option>
+                      <option value="Mantenimiento">Mantenimiento</option>
+                      <option value="Fuera de servicio">Fuera de servicio</option>
                     </select>
                   </div>
                 </div>
@@ -315,6 +299,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                   onClick={async () => {
                     if(!formData.nombre) {
                        setError("El nombre del activo es obligatorio.");
+                       toast.error("El nombre del activo es obligatorio.");
                        return;
                     }
                     await onGuardar({
