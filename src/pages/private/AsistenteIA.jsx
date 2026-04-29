@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify"; // Importamos la librería de notificaciones
 import { Bot, Send, Sparkles } from "lucide-react"; // Iconos más limpios
 
-import api from "../../services/api";
+import iaService from "../../services/iaService";
 
 /**
  * @component AsistenteIA
@@ -60,7 +60,7 @@ const AsistenteIA = () => {
     // 3.2. Comunicación con el backend usando Axios (¡Mucho más limpio!)
     try {
       // ✅ Usamos tu instancia "api". El token se envía solo gracias al interceptor.
-      const response = await api.post("/chat/ayuda", { 
+      const response = await iaService.chatAyuda({ 
         pregunta: texto 
       });
 
@@ -69,7 +69,7 @@ const AsistenteIA = () => {
         id: Date.now() + 1,
         rol: "ia",
         // Axios ya convierte el JSON, así que accedemos directamente a response.data
-        texto: response.data.respuesta || "Lo siento, no pude procesar una respuesta de texto válida.",
+        texto: response.respuesta || "Lo siento, no pude procesar una respuesta de texto válida.",
         hora: new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }),
       };
       

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Search, ArrowLeft, Mail, Phone, Lock, User as UserIcon, Shield, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import api from '../../services/api';
+import authService from '../../services/authService';
+import empresasService from '../../services/empresasService';
 
 /**
  * @component Equipo
@@ -39,9 +40,9 @@ function Equipo() {
     setCargandoLista(true);
     try {
       // Usamos el endpoint "Listar Subusuarios" del Swagger
-      const response = await api.get('/empresas/');
+      const response = await empresasService.listarSubusuarios();
       
-      const data = response.data.datos || response.data || [];
+      const data = response.datos || response || [];
       setEquipo(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al obtener equipo:", error);
@@ -83,7 +84,7 @@ function Equipo() {
       };
 
       // Usamos el registro privado para asignar este usuario a tu empresa
-      await api.post("/auth/register", payload);
+      await authService.register(payload);
 
       toast.success("¡Empleado agregado a tu empresa con éxito!");
       

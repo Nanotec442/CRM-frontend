@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import Navbar from "../../components/layout/Navbar";
 
 // Usamos tu instancia centralizada de Axios
-import api from "../../services/api";
+import empresasService from "../../services/empresasService";
 
 /**
  * @component Register
@@ -54,7 +54,7 @@ function Register() {
       delete payload.nombre_completo;
 
       // Petición POST al endpoint público definitivo
-      await api.post("/empresas/registro-empresa", payload);
+      await empresasService.registroEmpresa(payload);
 
       toast.success("¡Empresa y cuenta creadas con éxito! Por favor, inicia sesión.");
       navigate("/login");

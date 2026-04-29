@@ -1,25 +1,12 @@
-import api from "./api";
+import { reservasService } from "./reservasService";
+import { clientesService } from "./clientesService";
+import activosService from "./activosService";
 
-export const getReservas = async () => {
-  const res = await api.get("/reservas/");
-  return res.data;
-};
-
-export const createReserva = async (data) => {
-  const res = await api.post("/reservas/", data);
-  return res.data;
-};
-
-export const deleteReserva = async (id) => {
-  await api.delete(`/reservas/${id}`);
-};
-
-export const getClientes = async () => {
-  const res = await api.get("/crm/clientes/");
-  return res.data;
-};
-
+export const getReservas = async () => reservasService.listar();
+export const createReserva = async (data) => reservasService.crear(data);
+export const deleteReserva = async (id) => reservasService.eliminar(id);
+export const getClientes = async () => clientesService.listar();
 export const getActivos = async () => {
-  const res = await api.get("/reservas/activos/");
+  const res = await activosService.getActivos();
   return res.data;
 };

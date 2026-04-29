@@ -3,7 +3,7 @@ import { FileText, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify'; // Agregamos toastify por si se cae la red
 
 // Importamos la instancia centralizada de Axios
-import api from "../../services/api";
+import iaService from "../../services/iaService";
 
 const DocumentosConfig = ({ onAIComplete }) => {
   // --- ESTADOS DEL COMPONENTE ---
@@ -56,10 +56,9 @@ const DocumentosConfig = ({ onAIComplete }) => {
 
     try {
       // ✅ 3. Petición limpia usando Axios. El token viaja solo.
-      const response = await api.post('/documentos/carga-mixta', formData);
+      const data = await iaService.cargaMixtaDocumentos(formData);
 
       // 4. Éxito: Extraemos datos y notificamos al padre
-      const data = response.data;
       setSuccessMsg(`Documento analizado correctamente. ${data.mensaje || ''}`);
       
       if (onAIComplete) {

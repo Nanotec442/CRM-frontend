@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { BrainCircuit, UploadCloud, FileText, Loader2, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
-import api from "../../services/api";
+import iaService from "../../services/iaService";
 
 export default function EntrenarIA() {
   // --- ESTADOS ---
@@ -55,10 +55,10 @@ export default function EntrenarIA() {
 
     try {
       // Axios se encarga automáticamente de poner el Content-Type a multipart/form-data
-      const response = await api.post("/entrenar/pdf", formData);
+      const response = await iaService.entrenarPdf(formData);
 
       // Éxito en el entrenamiento
-      const mensajeExito = response.data?.mensaje || "Documento procesado e indexado en la base de conocimiento.";
+      const mensajeExito = response?.mensaje || "Documento procesado e indexado en la base de conocimiento.";
       setSuccessMsg(mensajeExito);
       toast.success("¡IA entrenada con éxito!");
 

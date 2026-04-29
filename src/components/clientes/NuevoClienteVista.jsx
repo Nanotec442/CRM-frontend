@@ -3,7 +3,7 @@ import { User, Mail, Phone, Fingerprint, Save, Loader2, CheckCircle, AlertCircle
 import { toast } from 'react-toastify'; // Agregamos toastify para las alertas
 
 // Usamos tu módulo de Axios centralizado
-import api from "../../services/api";
+import iaService from "../../services/iaService";
 
 function NuevoClienteVista({ onGuardar, onVolver }) {
   // --- ESTADOS DEL FORMULARIO ---
@@ -62,9 +62,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
 
     try {
       // ✅ AQUÍ ESTÁ LA MAGIA: Axios hace el trabajo pesado y pone el token solo
-      const response = await api.post('/clientes/carga-inteligente', payload);
-      
-      const data = response.data; // Axios ya parseó el JSON
+      const data = await iaService.cargaInteligenteClientes(payload);
       
       // Mapeo de datos extraídos al formulario
       if (data.datos && data.datos.clientes && data.datos.clientes.length > 0) {

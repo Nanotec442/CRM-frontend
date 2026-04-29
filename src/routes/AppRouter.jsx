@@ -24,7 +24,7 @@ function AppRouter() {
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} /> {/* ✅ AGREGAMOS LA RUTA */}
+          <Route path="register" element={<Register />} />
         </Route>
 
         {/* --- RUTAS PRIVADAS (Requieren Token) --- */}

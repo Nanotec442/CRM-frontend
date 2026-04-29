@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
-import { Edit2, PenTool, FileSignature } from "lucide-react"; // Agregamos íconos para la UI premium
+import { Edit2, PenTool, FileSignature, KanbanSquare } from "lucide-react"; // Añadido KanbanSquare
 
-// Agregamos onFirmarFisica y onFirmarLegal a las props
-function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo, onFirmarFisica, onFirmarLegal }) {
+// Añadida la prop onMoverAPipeline
+function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo, onFirmarFisica, onFirmarLegal, onMoverAPipeline }) {
   // Filtramos clientes duplicados usando una clave única (id, email o nombre+telefono)
   const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
@@ -141,10 +141,19 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                       <EstadoBadge estado={c.estado ?? c.status} />
                     </td>
 
-                    {/* Acciones (Firmas y Edición) */}
-                    <td className="px-6 py-4">
+                    {/* Acciones */}
+                    <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         
+                        {/* 👇 NUEVO BOTÓN: Enviar al Pipeline 👇 */}
+                        <button
+                          onClick={() => onMoverAPipeline(c.id ?? c.cliente_id)}
+                          title="Crear Oportunidad (Enviar al Pipeline)"
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <KanbanSquare size={18} />
+                        </button>
+
                         <button
                           onClick={() => onFirmarFisica(c.id ?? c.cliente_id)}
                           title="Firma Rápida en Pantalla"
@@ -170,7 +179,6 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                         >
                           <Edit2 size={18} />
                         </button>
-
                       </div>
                     </td>
                   </tr>

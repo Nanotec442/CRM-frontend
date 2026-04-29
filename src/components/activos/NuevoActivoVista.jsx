@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Package, Tag, Activity, FileText, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, UploadCloud, HelpCircle, Barcode } from 'lucide-react';
 import { toast } from 'react-toastify'; // Agregamos las notificaciones elegantes
 
-import api from "../../services/api";
+import iaService from "../../services/iaService";
 
 function NuevoActivoVista({ onGuardar, onVolver }) {
   // --- ESTADOS DEL FORMULARIO ---
@@ -61,8 +61,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
 
     try {
       // ✅ Axios inyecta el token y hace la petición limpiamente
-      const response = await api.post('/activos/carga-inteligente', payload);
-      const data = response.data;
+      const data = await iaService.cargaInteligenteActivos(payload);
       
       if (data.datos && data.datos.activos && data.datos.activos.length > 0) {
         const info = data.datos.activos[0];

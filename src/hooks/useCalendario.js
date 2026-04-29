@@ -22,7 +22,11 @@ export const useCalendario = () => {
   };
 
   useEffect(() => {
-    loadEventos();
+    const run = async () => {
+      await loadEventos();
+    };
+
+    void run();
   }, []);
 
   const agregarEvento = async (evento) => {

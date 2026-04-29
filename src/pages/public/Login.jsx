@@ -73,7 +73,7 @@ function Login() {
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[420px] rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-full max-w-105 rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
           
           {/* Cabecera del Formulario */}
           <div className="mb-8 text-center flex flex-col items-center">
