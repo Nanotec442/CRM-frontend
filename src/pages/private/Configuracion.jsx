@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useConfig } from "../../hooks/useConfig";
 import { jwtDecode } from "jwt-decode";
-import { Loader2, Sparkles, Save } from "lucide-react"; // Añadimos íconos para un look más profesional
+import { Loader2, Sparkles, Save } from "lucide-react";
 
 import ConfigSidebar from "../../components/configuracion/ConfigSidebar";
 import PerfilConfig from "../../components/configuracion/PerfilConfig";
 import EmpresaConfig from "../../components/configuracion/EmpresaConfig";
 import PreferenciasConfig from "../../components/configuracion/PreferenciasConfig";
-import SeguridadConfig from "../../components/configuracion/SeguridadConfig";
+import EntrenarIA from "../../components/configuracion/EntrenarIA"; // Importación corregida
 import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
 
 /**
@@ -28,14 +28,16 @@ const Configuracion = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      // jwtDecode es la forma más robusta y segura de leer el payload sin romper React
+      // jwtDecode extrae la info del usuario sin hacer peticiones extra
       const payload = jwtDecode(token);
 
       setForm((prev) => ({
         ...prev,
-        nombre: payload.nombre || payload.name || prev?.nombre || "",
+        // Unimos nombre y apellido para la UI
+        nombre_completo: prev?.nombre_completo || `${payload.nombre || ''} ${payload.apellido || ''}`.trim() || payload.name || "",
         email: payload.email || payload.sub || prev?.email || "",
-        cargo: payload.cargo || prev?.cargo || "Administrador",
+        is_superadmin: payload.is_superadmin || false,
+        telefono: payload.telefono || prev?.telefono || "",
       }));
     } catch (error) {
       console.warn("No se pudo decodificar el token para la configuración:", error);
@@ -45,7 +47,12 @@ const Configuracion = () => {
   // 2. SINCRONIZACIÓN CON EL BACKEND (Vía Custom Hook)
   useEffect(() => {
     if (config) {
-      setForm((prev) => ({ ...prev, ...config }));
+      setForm((prev) => ({ 
+        ...prev, 
+        ...config,
+        // Si el backend trae nombre y apellido, los unificamos
+        nombre_completo: config.nombre_completo || `${config.nombre || ''} ${config.apellido || ''}`.trim() || prev.nombre_completo
+      }));
     }
   }, [config]);
 
@@ -57,7 +64,29 @@ const Configuracion = () => {
     });
   };
 
-  // 4. FLUJO DE INTELIGENCIA ARTIFICIAL
+  // 4. PREPARACIÓN ANTES DE GUARDAR
+  const handleGuardar = async () => {
+    setIsProcessing(true);
+    
+    // Hacemos una copia profunda del formulario para no mutar el estado visual
+    const payload = { ...form };
+
+    // TRUCO: Dividimos el nombre_completo de vuelta a nombre y apellido para el backend
+    if (payload.nombre_completo) {
+      const partes = payload.nombre_completo.trim().split(" ");
+      payload.nombre = partes[0] || "";
+      payload.apellido = partes.slice(1).join(" ") || " ";
+      delete payload.nombre_completo; // Eliminamos la variable temporal
+    }
+
+    try {
+      await guardar(payload);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 5. FLUJO DE INTELIGENCIA ARTIFICIAL (Carga de Documentos Mixta)
   const handleAIFill = (data) => {
     setIsProcessing(true);
 
@@ -69,11 +98,11 @@ const Configuracion = () => {
       }));
 
       setIsProcessing(false);
-      setActive("empresa"); // Redirige a la vista de empresa para que el usuario valide los datos
+      setActive("empresa"); // Redirige a la vista de empresa para que el usuario valide los datos extraídos
     }, 1500);
   };
 
-  // 5. RENDERIZADO CONDICIONAL DE PESTAÑAS
+  // 6. RENDERIZADO CONDICIONAL DE PESTAÑAS
   const renderContent = () => {
     if (isProcessing) return <ProcessingLoader />;
 
@@ -86,15 +115,15 @@ const Configuracion = () => {
         return <DocumentosConfig onAIComplete={handleAIFill} />;
       case "preferencias":
         return <PreferenciasConfig form={form} handleChange={handleChange} />;
-      case "seguridad":
-        return <SeguridadConfig />;
+      case "seguridad": // Asumiendo que "seguridad" es la tab para entrenar la IA en tu ConfigSidebar
+        return <EntrenarIA />;
       default:
         return <PerfilConfig form={form} handleChange={handleChange} />;
     }
   };
 
   return (
-    <div className="space-y-8 font-sans pb-10">
+    <div className="space-y-8 font-sans pb-10 animate-in fade-in duration-500">
       
       {/* --- HEADER --- */}
       <section>
@@ -102,7 +131,7 @@ const Configuracion = () => {
           Configuración del Sistema
         </h1>
         <p className="mt-2 text-slate-600">
-          Gestiona la identidad de tu organización, preferencias de usuario y seguridad.
+          Gestiona la identidad de tu organización, preferencias de usuario y la base de conocimiento IA.
         </p>
       </section>
 
@@ -118,15 +147,15 @@ const Configuracion = () => {
         <main className="lg:col-span-9 space-y-6">
           
           {/* Contenedor Blanco Principal */}
-          <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 min-h-[450px] transition-all duration-300">
+          <div className="rounded-3xl bg-white p-2 shadow-sm ring-1 ring-slate-200 min-h-[450px] transition-all duration-300">
             {renderContent()}
           </div>
 
-          {/* Botón de Guardar (Se oculta en vistas que no lo necesitan, como la subida de documentos) */}
-          {active !== "documentos" && !isProcessing && (
+          {/* Botón de Guardar (Se oculta en vistas que no requieren guardado global) */}
+          {active !== "documentos" && active !== "seguridad" && !isProcessing && (
             <div className="flex justify-end pt-2 animate-in fade-in duration-300">
               <button
-                onClick={() => guardar(form)}
+                onClick={handleGuardar}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all active:scale-[0.98] group"
               >
                 <Save size={18} className="group-hover:scale-110 transition-transform" />
@@ -145,7 +174,7 @@ const Configuracion = () => {
  * Componente de Carga de IA 
  */
 const ProcessingLoader = () => (
-  <div className="flex flex-col items-center justify-center h-full min-h-87.5 bg-indigo-50/50 rounded-xl border border-dashed border-indigo-100 animate-in fade-in duration-500">
+  <div className="flex flex-col items-center justify-center h-full min-h-100 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100 animate-in fade-in zoom-in-95 duration-500 m-4">
     <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-5" strokeWidth={1.5} />
     
     <div className="flex items-center gap-2 mb-3">
@@ -156,7 +185,7 @@ const ProcessingLoader = () => (
     </div>
     
     <p className="text-indigo-700/70 text-sm font-medium text-center max-w-sm">
-      Extrayendo información relevante del documento para configurar tu entorno automáticamente.
+      Sincronizando información y configurando tu entorno automáticamente.
     </p>
   </div>
 );

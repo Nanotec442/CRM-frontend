@@ -4,7 +4,7 @@ export default function ConfigSidebar({ active, setActive }) {
     { id: "empresa", label: "Datos de Empresa", icon: "🏢" },
     { id: "documentos", label: "Análisis IA", icon: "📄" },
     { id: "preferencias", label: "Preferencias", icon: "⚙️" },
-    { id: "seguridad", label: "Seguridad", icon: "🔒" },
+    { id: "seguridad", label: "Entrenar IA", icon: "📜" },
   ];
 
   return (

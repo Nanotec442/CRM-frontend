@@ -3,8 +3,11 @@ import { NavLink, useNavigate } from "react-router-dom";
 function Sidebar() {
   const navigate = useNavigate();
 
+  // Mejora de seguridad: Limpiamos toda la sesión al salir
   const handleLogout = () => {
     localStorage.removeItem("isAuth");
+    localStorage.removeItem("token"); 
+    localStorage.removeItem("tenant_id");
     navigate("/login");
   };
 
@@ -64,6 +67,16 @@ function Sidebar() {
             }
           >
             Reportes
+          </NavLink>
+
+          {/* --- NUEVO MÓDULO: EQUIPO --- */}
+          <NavLink
+            to="/panel/equipo"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Equipo
           </NavLink>
 
           <NavLink

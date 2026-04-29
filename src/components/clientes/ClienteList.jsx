@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
+import { Edit2, PenTool, FileSignature } from "lucide-react"; // Agregamos íconos para la UI premium
 
-function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo }) {
+// Agregamos onFirmarFisica y onFirmarLegal a las props
+function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo, onFirmarFisica, onFirmarLegal }) {
   // Filtramos clientes duplicados usando una clave única (id, email o nombre+telefono)
-  // Se usa useMemo para evitar recalcular esto en cada renderizado si 'clientes' no cambia
   const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
 
@@ -140,14 +141,37 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                       <EstadoBadge estado={c.estado ?? c.status} />
                     </td>
 
-                    {/* Botón de edición (Aparece en hover para mantener la tabla limpia) */}
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => onEditar(c)}
-                        className="text-xs font-medium text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      >
-                        Editar
-                      </button>
+                    {/* Acciones (Firmas y Edición) */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                        
+                        <button
+                          onClick={() => onFirmarFisica(c.id ?? c.cliente_id)}
+                          title="Firma Rápida en Pantalla"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        >
+                          <PenTool size={18} />
+                        </button>
+
+                        <button
+                          onClick={() => onFirmarLegal(c.id ?? c.cliente_id)}
+                          title="Enviar Contrato Legal"
+                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        >
+                          <FileSignature size={18} />
+                        </button>
+
+                        <div className="w-px h-4 bg-slate-200 mx-1"></div>
+
+                        <button
+                          onClick={() => onEditar(c)}
+                          title="Editar Cliente"
+                          className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+
+                      </div>
                     </td>
                   </tr>
                 );

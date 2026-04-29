@@ -5,9 +5,13 @@ import PipelineClientes from "../../components/clientes/PipelineClientes";
 import NuevoClienteVista from "../../components/clientes/NuevoClienteVista";
 import { clientesService } from "../../services/clientesService";
 
+// --- IMPORTAMOS LOS COMPONENTES DE FIRMA ---
+import ModalFirmaLegal from "../../components/firmas/ModalFirmaLegal"; 
+import FirmaFisica from "../../components/firmas/FirmaFisica";
+
 /**
  * Vista de administración de clientes.
- * Permite alternar entre un tablero visual (Pipeline), una lista detallada y la creación con IA.
+ * Permite alternar entre un tablero visual (Pipeline), una lista detallada, la creación con IA y gestión de firmas.
  */
 function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -16,9 +20,11 @@ function Clientes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formVisible, setFormVisible] = useState(false);
-  
-  // 2. Ahora 'vista' puede ser "pipeline", "lista" o "nuevo"
   const [vista, setVista] = useState("pipeline"); 
+
+  // --- ESTADOS PARA LAS FIRMAS ---
+  const [firmaLegalState, setFirmaLegalState] = useState({ isOpen: false, clienteId: null });
+  const [firmaFisicaState, setFirmaFisicaState] = useState({ isOpen: false, clienteId: null });
 
   const cargarClientes = useCallback(async () => {
     try {
@@ -86,7 +92,6 @@ function Clientes() {
         setClientes((prev) => [mapped, ...prev]);
       }
       
-      // 3. Después de guardar, ocultamos el formulario y volvemos a la lista
       setFormVisible(false);
       setVista("lista");
     } catch (err) {
@@ -103,6 +108,18 @@ function Clientes() {
   const handleCancelar = () => {
     setClienteEditando(null);
     setFormVisible(false);
+  };
+
+  // --- MANEJADORES DE FIRMA ---
+  const handleGuardarFirmaFisica = async (imagenBase64) => {
+    try {
+      // Aquí puedes enviar la imagen Base64 a FastAPI para adjuntarla al cliente
+      // await clientesService.guardarFirma(firmaFisicaState.clienteId, imagenBase64);
+      console.log("Firma guardada para cliente:", firmaFisicaState.clienteId);
+      setFirmaFisicaState({ isOpen: false, clienteId: null });
+    } catch (err) {
+      console.error("Error al guardar la firma física", err);
+    }
   };
 
   const clientesFiltrados = clientes.filter((c) => {
@@ -162,8 +179,8 @@ function Clientes() {
           <button
             onClick={() => {
               setClienteEditando(null);
-              setFormVisible(false); // Ocultamos el form lateral
-              setVista("nuevo"); // Abrimos la vista IA
+              setFormVisible(false);
+              setVista("nuevo"); 
             }}
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors shadow-sm"
           >
@@ -181,7 +198,7 @@ function Clientes() {
         </div>
       )}
 
-      {/* 4. Renderizado Condicional de las 3 Vistas */}
+      {/* Renderizado Condicional de las 3 Vistas */}
       <section>
         
         {vista === "pipeline" && (
@@ -192,7 +209,6 @@ function Clientes() {
 
         {vista === "nuevo" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Le pasamos a NuevoClienteVista las funciones para volver atrás y guardar */}
             <NuevoClienteVista 
               onVolver={() => setVista("lista")} 
               onGuardar={handleGuardar} 
@@ -223,12 +239,35 @@ function Clientes() {
                 busqueda={busqueda}
                 setBusqueda={setBusqueda}
                 onNuevo={() => { setClienteEditando(null); setVista("nuevo"); }}
+                // Pasamos las funciones para abrir los modales desde la tabla
+                onFirmarLegal={(id) => setFirmaLegalState({ isOpen: true, clienteId: id })}
+                onFirmarFisica={(id) => setFirmaFisicaState({ isOpen: true, clienteId: id })}
               />
             </div>
           </div>
         )}
 
       </section>
+
+      {/* --- MODALES DE FIRMA --- */}
+      
+      {/* 1. Modal de Firma Legal (Iframe API) */}
+      <ModalFirmaLegal 
+        isOpen={firmaLegalState.isOpen} 
+        onClose={() => setFirmaLegalState({ isOpen: false, clienteId: null })}
+        clienteId={firmaLegalState.clienteId}
+      />
+
+      {/* 2. Modal de Firma Física (Canvas) */}
+      {firmaFisicaState.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <FirmaFisica 
+            onGuardar={handleGuardarFirmaFisica}
+            onCancelar={() => setFirmaFisicaState({ isOpen: false, clienteId: null })}
+          />
+        </div>
+      )}
+
     </div>
   );
 }

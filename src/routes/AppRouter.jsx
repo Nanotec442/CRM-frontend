@@ -5,12 +5,14 @@ import ProtectedRoute from "./ProtectedRoute";
 
 import Home from "../pages/public/Home";
 import Login from "../pages/public/Login";
+import Register from "../pages/public/Register";
 
 import Dashboard from "../pages/private/Dashboard";
 import Clientes from "../pages/private/Clientes";
 import Reservas from "../pages/private/Reservas";
 import Activos from "../pages/private/Activos";
 import Reportes from "../pages/private/Reportes";
+import Equipo from "../pages/private/Equipo";
 import AsistenteIA from "../pages/private/AsistenteIA";
 import Configuracion from "../pages/private/Configuracion";
 
@@ -18,11 +20,14 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* --- RUTAS PÚBLICAS --- */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} /> {/* ✅ AGREGAMOS LA RUTA */}
         </Route>
 
+        {/* --- RUTAS PRIVADAS (Requieren Token) --- */}
         <Route
           path="/panel"
           element={
@@ -36,6 +41,7 @@ function AppRouter() {
           <Route path="reservas" element={<Reservas />} />
           <Route path="activos" element={<Activos />} />
           <Route path="reportes" element={<Reportes />} />
+          <Route path="equipo" element={<Equipo />} />
           <Route path="asistente-ia" element={<AsistenteIA />} />
           <Route path="configuracion" element={<Configuracion />} />
         </Route>
