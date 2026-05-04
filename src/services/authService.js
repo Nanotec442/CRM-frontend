@@ -1,8 +1,7 @@
 import axios from "axios";
 import api from "./api";
 
-const API_URL = "http://127.0.0.1:8000";
-            //  "http://18.232.83.244:8000";
+const API_URL = "http://18.232.83.244:8000";
 
 const buildLoginPayload = (email, password) => {
   const params = new URLSearchParams();

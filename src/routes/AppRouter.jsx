@@ -10,10 +10,13 @@ import Register from "../pages/public/Register";
 import Dashboard from "../pages/private/Dashboard";
 import Clientes from "../pages/private/Clientes";
 import Reservas from "../pages/private/Reservas";
+import Documentos from "../pages/private/Documentos";
 import Activos from "../pages/private/Activos";
 import Reportes from "../pages/private/Reportes";
 import Equipo from "../pages/private/Equipo";
 import AsistenteIA from "../pages/private/AsistenteIA";
+import ForgotPassword from "../pages/public/ForgotPassword";
+import ResetPassword from "../pages/public/ResetPassword";
 import Configuracion from "../pages/private/Configuracion";
 
 function AppRouter() {
@@ -25,6 +28,9 @@ function AppRouter() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="forgot-password" element={<ForgotPassword/>} />
+          <Route path="reset-password" element={<ResetPassword />} />
+
         </Route>
 
         {/* --- RUTAS PRIVADAS (Requieren Token) --- */}
@@ -42,6 +48,7 @@ function AppRouter() {
           <Route path="activos" element={<Activos />} />
           <Route path="reportes" element={<Reportes />} />
           <Route path="equipo" element={<Equipo />} />
+          <Route path="documentos" element={<Documentos />} />
           <Route path="asistente-ia" element={<AsistenteIA />} />
           <Route path="configuracion" element={<Configuracion />} />
         </Route>

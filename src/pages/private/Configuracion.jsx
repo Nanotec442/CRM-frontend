@@ -7,8 +7,11 @@ import ConfigSidebar from "../../components/configuracion/ConfigSidebar";
 import PerfilConfig from "../../components/configuracion/PerfilConfig";
 import EmpresaConfig from "../../components/configuracion/EmpresaConfig";
 import PreferenciasConfig from "../../components/configuracion/PreferenciasConfig";
-import EntrenarIA from "../../components/configuracion/EntrenarIA"; // Importación corregida
+import EntrenarIA from "../../components/configuracion/EntrenarIA"; 
 import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
+
+// Importamos el servicio de empresas
+import empresasService from "../../services/empresasService";
 
 /**
  * Panel Central de Configuración.
@@ -22,35 +25,55 @@ const Configuracion = () => {
   const [active, setActive] = useState("perfil");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // 1. HIDRATACIÓN SEGURA DESDE JWT
+  // 1. HIDRATACIÓN DUAL: JWT (Usuario) + API (Empresa)
   useEffect(() => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    const inicializarDatos = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      // jwtDecode extrae la info del usuario sin hacer peticiones extra
-      const payload = jwtDecode(token);
+        // Decodificamos el usuario
+        const payload = jwtDecode(token);
+        
+        // Buscamos el ID de la empresa (puede venir en el JWT o en el localStorage)
+        const tenantId = payload.tenant_id || localStorage.getItem("tenant_id");
 
-      setForm((prev) => ({
-        ...prev,
-        // Unimos nombre y apellido para la UI
-        nombre_completo: prev?.nombre_completo || `${payload.nombre || ''} ${payload.apellido || ''}`.trim() || payload.name || "",
-        email: payload.email || payload.sub || prev?.email || "",
-        is_superadmin: payload.is_superadmin || false,
-        telefono: payload.telefono || prev?.telefono || "",
-      }));
-    } catch (error) {
-      console.warn("No se pudo decodificar el token para la configuración:", error);
-    }
+        // Actualizamos los datos del usuario primero (Carga instantánea)
+        setForm((prev) => ({
+          ...prev,
+          nombre_completo: prev?.nombre_completo || `${payload.nombre || ''} ${payload.apellido || ''}`.trim() || payload.name || "",
+          email: payload.email || payload.sub || prev?.email || "",
+          is_superadmin: payload.is_superadmin || false,
+          telefono: payload.telefono || prev?.telefono || "",
+        }));
+
+        // Si tenemos la empresa, vamos al backend a buscar sus datos reales (Carga asíncrona)
+        if (tenantId) {
+          const dataEmpresa = await empresasService.verMiEmpresa(tenantId);
+          setForm((prev) => ({
+            ...prev,
+            nombre_empresa: dataEmpresa.nombre_empresa || "",
+            rut_empresa: dataEmpresa.rut_empresa || "",
+            tipo_empresa: dataEmpresa.tipo_empresa || "",
+            direccion: dataEmpresa.direccion || "",
+            sub_dominio: dataEmpresa.sub_dominio || "",
+          }));
+        }
+
+      } catch (error) {
+        console.warn("Error al inicializar la configuración:", error);
+      }
+    };
+
+    inicializarDatos();
   }, []);
 
-  // 2. SINCRONIZACIÓN CON EL BACKEND (Vía Custom Hook)
+  // 2. SINCRONIZACIÓN CON ESTADO LOCAL
   useEffect(() => {
     if (config) {
       setForm((prev) => ({ 
         ...prev, 
         ...config,
-        // Si el backend trae nombre y apellido, los unificamos
         nombre_completo: config.nombre_completo || `${config.nombre || ''} ${config.apellido || ''}`.trim() || prev.nombre_completo
       }));
     }
@@ -64,33 +87,61 @@ const Configuracion = () => {
     });
   };
 
-  // 4. PREPARACIÓN ANTES DE GUARDAR
+  // 4. PREPARACIÓN Y RUTEO ANTES DE GUARDAR
   const handleGuardar = async () => {
     setIsProcessing(true);
     
-    // Hacemos una copia profunda del formulario para no mutar el estado visual
+    // Copia profunda para trabajar los datos
     const payload = { ...form };
 
-    // TRUCO: Dividimos el nombre_completo de vuelta a nombre y apellido para el backend
-    if (payload.nombre_completo) {
-      const partes = payload.nombre_completo.trim().split(" ");
-      payload.nombre = partes[0] || "";
-      payload.apellido = partes.slice(1).join(" ") || " ";
-      delete payload.nombre_completo; // Eliminamos la variable temporal
-    }
-
     try {
-      await guardar(payload);
+      if (active === "perfil") {
+        // Formateo del nombre para el perfil
+        if (payload.nombre_completo) {
+          const partes = payload.nombre_completo.trim().split(" ");
+          payload.nombre = partes[0] || "";
+          payload.apellido = partes.slice(1).join(" ") || " ";
+          delete payload.nombre_completo; 
+        }
+        
+        // Guardamos en el estado local/hook
+        guardar(payload);
+        // NOTA: Si tienes un endpoint para actualizar usuario (PATCH /usuarios/me), deberías llamarlo aquí.
+
+      } else if (active === "empresa") {
+        
+        // Filtramos estrictamente los datos corporativos para la API
+        const payloadEmpresa = {
+          nombre_empresa: payload.nombre_empresa,
+          rut_empresa: payload.rut_empresa,
+          tipo_empresa: payload.tipo_empresa,
+          direccion: payload.direccion,
+          // Excluimos sub_dominio si el backend no permite editarlo
+        };
+        
+        // Disparamos la petición al backend
+        await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
+        
+        // Actualizamos también el hook local por si acaso
+        guardar(payload);
+
+      } else {
+        // Fallback para preferencias u otros
+        guardar(payload);
+      }
+
+    } catch (error) {
+      console.error("Error al guardar la configuración:", error);
+      // Aquí podrías agregar un toast de error si falla la API
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // 5. FLUJO DE INTELIGENCIA ARTIFICIAL (Carga de Documentos Mixta)
+  // 5. FLUJO DE INTELIGENCIA ARTIFICIAL
   const handleAIFill = (data) => {
     setIsProcessing(true);
 
-    // Simulamos el tiempo de transición visual para que el usuario perciba que la IA hizo su trabajo
     setTimeout(() => {
       setForm((prev) => ({
         ...prev,
@@ -98,7 +149,7 @@ const Configuracion = () => {
       }));
 
       setIsProcessing(false);
-      setActive("empresa"); // Redirige a la vista de empresa para que el usuario valide los datos extraídos
+      setActive("empresa"); 
     }, 1500);
   };
 
@@ -115,7 +166,7 @@ const Configuracion = () => {
         return <DocumentosConfig onAIComplete={handleAIFill} />;
       case "preferencias":
         return <PreferenciasConfig form={form} handleChange={handleChange} />;
-      case "seguridad": // Asumiendo que "seguridad" es la tab para entrenar la IA en tu ConfigSidebar
+      case "seguridad": 
         return <EntrenarIA />;
       default:
         return <PerfilConfig form={form} handleChange={handleChange} />;

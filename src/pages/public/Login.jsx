@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { Mail, Lock, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
@@ -110,9 +110,17 @@ function Login() {
 
             {/* Input: Contraseña */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                Contraseña
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                  Contraseña
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-500 transition-colors pr-1"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
                 <input

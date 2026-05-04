@@ -3,7 +3,6 @@ import axios from "axios";
 // 1. Lectura estricta y directa para Vite
 const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-// 2. Nuestro chismoso para la consola (F12)
 console.log("🔗 Conectando al Backend en:", baseURL);
 
 const api = axios.create({

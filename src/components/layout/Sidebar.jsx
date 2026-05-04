@@ -69,7 +69,15 @@ function Sidebar() {
             Reportes
           </NavLink>
 
-          {/* --- NUEVO MÓDULO: EQUIPO --- */}
+          <NavLink
+            to="/panel/documentos"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Documentos
+          </NavLink>
+
           <NavLink
             to="/panel/equipo"
             className={({ isActive }) =>
