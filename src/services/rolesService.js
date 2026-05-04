@@ -7,7 +7,8 @@ export const rolesService = {
   },
 
   async crear(payload) {
-    const res = await api.post("/roles", payload);
+    // ✅ Barra final agregada para evitar el redirect 307 de FastAPI
+    const res = await api.post("/roles/", payload);
     return res.data;
   },
 

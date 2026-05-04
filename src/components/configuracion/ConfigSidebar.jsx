@@ -2,6 +2,7 @@ export default function ConfigSidebar({ active, setActive }) {
   const menuItems = [
     { id: "perfil", label: "Perfil de Usuario", icon: "👤" },
     { id: "empresa", label: "Datos de Empresa", icon: "🏢" },
+    { id: "roles", label: "Roles y Permisos", icon: "🛡️" }, // <-- ¡AQUÍ ESTÁ EL NUEVO BOTÓN!
     { id: "documentos", label: "Análisis IA", icon: "📄" },
     { id: "preferencias", label: "Preferencias", icon: "⚙️" },
     { id: "seguridad", label: "Entrenar IA", icon: "📜" },

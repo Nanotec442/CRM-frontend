@@ -9,6 +9,7 @@ import EmpresaConfig from "../../components/configuracion/EmpresaConfig";
 import PreferenciasConfig from "../../components/configuracion/PreferenciasConfig";
 import EntrenarIA from "../../components/configuracion/EntrenarIA"; 
 import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
+import RolesConfig from "../../components/configuracion/RolesConfig"; // NUEVO: Importamos el componente de roles
 
 // Importamos el servicio de empresas
 import empresasService from "../../services/empresasService";
@@ -104,35 +105,26 @@ const Configuracion = () => {
           delete payload.nombre_completo; 
         }
         
-        // Guardamos en el estado local/hook
         guardar(payload);
-        // NOTA: Si tienes un endpoint para actualizar usuario (PATCH /usuarios/me), deberías llamarlo aquí.
 
       } else if (active === "empresa") {
         
-        // Filtramos estrictamente los datos corporativos para la API
         const payloadEmpresa = {
           nombre_empresa: payload.nombre_empresa,
           rut_empresa: payload.rut_empresa,
           tipo_empresa: payload.tipo_empresa,
           direccion: payload.direccion,
-          // Excluimos sub_dominio si el backend no permite editarlo
         };
         
-        // Disparamos la petición al backend
         await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
-        
-        // Actualizamos también el hook local por si acaso
         guardar(payload);
 
       } else {
-        // Fallback para preferencias u otros
         guardar(payload);
       }
 
     } catch (error) {
       console.error("Error al guardar la configuración:", error);
-      // Aquí podrías agregar un toast de error si falla la API
     } finally {
       setIsProcessing(false);
     }
@@ -166,12 +158,17 @@ const Configuracion = () => {
         return <DocumentosConfig onAIComplete={handleAIFill} />;
       case "preferencias":
         return <PreferenciasConfig form={form} handleChange={handleChange} />;
+      case "roles": // NUEVO: Añadimos el case para roles
+        return <RolesConfig />;
       case "seguridad": 
         return <EntrenarIA />;
       default:
         return <PerfilConfig form={form} handleChange={handleChange} />;
     }
   };
+
+  // Para ocultar el botón general de guardar en la pestaña de roles (ya que los roles se guardan solos)
+  const ocultarBotonGuardar = ["documentos", "seguridad", "roles"].includes(active) || isProcessing;
 
   return (
     <div className="space-y-8 font-sans pb-10 animate-in fade-in duration-500">
@@ -198,12 +195,12 @@ const Configuracion = () => {
         <main className="lg:col-span-9 space-y-6">
           
           {/* Contenedor Blanco Principal */}
-          <div className="rounded-3xl bg-white p-2 shadow-sm ring-1 ring-slate-200 min-h-[450px] transition-all duration-300">
+          <div className="rounded-3xl bg-white p-2 shadow-sm ring-1 ring-slate-200 min-h-112.5 transition-all duration-300">
             {renderContent()}
           </div>
 
-          {/* Botón de Guardar (Se oculta en vistas que no requieren guardado global) */}
-          {active !== "documentos" && active !== "seguridad" && !isProcessing && (
+          {/* Botón de Guardar */}
+          {!ocultarBotonGuardar && (
             <div className="flex justify-end pt-2 animate-in fade-in duration-300">
               <button
                 onClick={handleGuardar}
@@ -221,20 +218,16 @@ const Configuracion = () => {
   );
 };
 
-/**
- * Componente de Carga de IA 
- */
 const ProcessingLoader = () => (
+  // ... tu loader se mantiene igual
   <div className="flex flex-col items-center justify-center h-full min-h-100 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100 animate-in fade-in zoom-in-95 duration-500 m-4">
     <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-5" strokeWidth={1.5} />
-    
     <div className="flex items-center gap-2 mb-3">
       <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
       <h3 className="text-xl font-bold text-indigo-900">
         PIVOT procesando datos...
       </h3>
     </div>
-    
     <p className="text-indigo-700/70 text-sm font-medium text-center max-w-sm">
       Sincronizando información y configurando tu entorno automáticamente.
     </p>

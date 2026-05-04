@@ -19,6 +19,7 @@ import ForgotPassword from "../pages/public/ForgotPassword";
 import ResetPassword from "../pages/public/ResetPassword";
 import Configuracion from "../pages/private/Configuracion";
 
+
 function AppRouter() {
   return (
     <BrowserRouter>
