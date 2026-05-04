@@ -1,7 +1,8 @@
 import axios from "axios";
 
-// 1. Lectura estricta y directa para Vite
-const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+// Lee la variable desde la nube (producción) o desde tu archivo .env local
+const envBaseUrl = import.meta.env.VITE_API_URL;
+const baseURL = envBaseUrl ? envBaseUrl.trim() : "http://127.0.0.1:8000";
 
 console.log("🔗 Conectando al Backend en:", baseURL);
 

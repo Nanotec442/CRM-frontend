@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { clientesService } from "../../services/clientesService";
 import { reservasService } from "../../services/reservasService";
@@ -7,52 +7,54 @@ import activosService from "../../services/activosService";
 function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Estados para almacenar nuestros cálculos
   const [metricas, setMetricas] = useState({
     totalClientes: 0,
     reservasPendientes: 0,
     activosDisponibles: 0,
     reservasHoy: 0,
   });
-
   const [actividadReciente, setActividadReciente] = useState([]);
 
   useEffect(() => {
     const cargarDatosDashboard = async () => {
       try {
         setLoading(true);
-        // Hacemos las 3 llamadas con los nombres exactos de tus servicios
+        setError(null);
+
         const [clientes, reservas, activos] = await Promise.all([
-          clientesService.listar().catch(() => []),
-          reservasService.listar().catch(() => []),
-          activosService.getActivos().catch(() => []) // <- AQUÍ USAMOS getActivos()
+          clientesService.listar(),
+          reservasService.listar(),
+          activosService.getActivos(),
         ]);
 
-// --- 1. CÁLCULOS MATEMÁTICOS PARA LOS KPIs ---
-        
-        // NORMALIZACIÓN: Nos aseguramos de extraer el arreglo, venga como venga de Axios o FastAPI
-        const dataClientes = Array.isArray(clientes) ? clientes : (clientes?.data || clientes?.clientes || []);
-        const dataReservas = Array.isArray(reservas) ? reservas : (reservas?.data || reservas?.reservas || []);
-        const dataActivos = Array.isArray(activos) ? activos : (activos?.data || activos?.activos || []);
-        
-        const hoy = new Date();
-        const hoyString = hoy.toISOString().split("T")[0]; 
-        
+        const dataClientes = Array.isArray(clientes)
+          ? clientes
+          : (clientes?.data || clientes?.clientes || []);
+        const dataReservas = Array.isArray(reservas)
+          ? reservas
+          : (reservas?.data || reservas?.reservas || []);
+        const dataActivos = Array.isArray(activos)
+          ? activos
+          : (activos?.data || activos?.activos || []);
+
+        const hoy = new Date().toISOString().split("T")[0];
         let pendientes = 0;
         let paraHoy = 0;
-        
-        // Usamos dataReservas en lugar de reservas
-        dataReservas.forEach(reserva => {
-          if (reserva.estado?.toLowerCase() === "pendiente") pendientes++;
-          
+
+        dataReservas.forEach((reserva) => {
+          if (reserva.estado?.toLowerCase() === "pendiente") {
+            pendientes += 1;
+          }
+
           const fechaReserva = reserva.fecha_inicio ? reserva.fecha_inicio.split("T")[0] : "";
-          if (fechaReserva === hoyString && reserva.estado?.toLowerCase() !== "cancelada") {
-            paraHoy++;
+          if (fechaReserva === hoy && reserva.estado?.toLowerCase() !== "cancelada") {
+            paraHoy += 1;
           }
         });
 
-        const disponibles = dataActivos.filter(a => a.estado?.toLowerCase() === "disponible" || a.estado?.toLowerCase() === "activo").length;
+        const disponibles = dataActivos.filter((activo) =>
+          ["disponible", "activo", "operativo"].includes(activo.estado?.toLowerCase())
+        ).length;
 
         setMetricas({
           totalClientes: dataClientes.length,
@@ -61,21 +63,24 @@ function Dashboard() {
           reservasHoy: paraHoy,
         });
 
-        // --- 2. ACTIVIDAD RECIENTE ---
         const ultimasReservas = [...dataReservas]
+          .filter((reserva) => reserva?.fecha_inicio)
           .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio))
           .slice(0, 3)
-          .map(r => ({
-            id: r.id,
-            title: `Reserva ${r.estado || "Registrada"}`,
-            description: `Para el ${new Date(r.fecha_inicio).toLocaleDateString("es-CL")} a las ${new Date(r.fecha_inicio).toLocaleTimeString("es-CL", {hour: '2-digit', minute:'2-digit'})}`,
+          .map((reserva) => ({
+            id: reserva.id,
+            title: `Reserva ${reserva.estado || "Registrada"}`,
+            description: `Para el ${new Date(reserva.fecha_inicio).toLocaleDateString("es-CL")} a las ${new Date(reserva.fecha_inicio).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}`,
           }));
 
         setActividadReciente(ultimasReservas);
-
       } catch (err) {
         console.error("Error cargando dashboard:", err);
-        setError("Hubo un problema al cargar los datos del panel.");
+        setError(
+          err?.response?.data?.detail ||
+          err?.message ||
+          "Hubo un problema al cargar los datos del panel."
+        );
       } finally {
         setLoading(false);
       }
@@ -85,20 +90,20 @@ function Dashboard() {
   }, []);
 
   const quickAccess = [
-    { 
-      title: "Gestionar clientes", 
+    {
+      title: "Gestionar clientes",
       description: "Administra información y seguimiento.",
-      path:"/panel/clientes" 
+      path: "/panel/clientes",
     },
-    { 
+    {
       title: "Ver reservas",
       description: "Consulta reservas activas y pendientes.",
-      path:"/panel/reservas"
+      path: "/panel/reservas",
     },
-    { 
+    {
       title: "Usar Asistente IA",
       description: "Obtén apoyo inteligente en tareas del CRM.",
-      path:"/panel/asistente-ia"
+      path: "/panel/asistente-ia",
     },
   ];
 
@@ -125,7 +130,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* KPIs SUPERIORES */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:-translate-y-1 transition-transform">
           <p className="text-sm font-medium text-slate-500">Total Clientes</p>
@@ -153,7 +157,6 @@ function Dashboard() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-3">
-        {/* ACTIVIDAD RECIENTE */}
         <div className="xl:col-span-2 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h2 className="text-xl font-semibold text-slate-900">Actividad reciente (Últimas reservas)</h2>
           <div className="mt-5 space-y-4">
@@ -165,19 +168,14 @@ function Dashboard() {
                   key={activity.id}
                   className="rounded-xl border border-slate-200 p-4 transition-colors hover:bg-slate-50"
                 >
-                  <h3 className="text-base font-semibold text-slate-800">
-                    {activity.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {activity.description}
-                  </p>
+                  <h3 className="text-base font-semibold text-slate-800">{activity.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{activity.description}</p>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* RESUMEN DEL DÍA */}
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h2 className="text-xl font-semibold text-slate-900">Resumen del día</h2>
           <div className="mt-5 space-y-4">
@@ -199,7 +197,6 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* ACCESOS RÁPIDOS */}
       <section>
         <h2 className="text-xl font-semibold text-slate-900">Accesos rápidos</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -1,7 +1,4 @@
-import axios from "axios";
 import api from "./api";
-
-const API_URL = "http://18.232.83.244:8000";
 
 const buildLoginPayload = (email, password) => {
   const params = new URLSearchParams();
@@ -12,8 +9,8 @@ const buildLoginPayload = (email, password) => {
 
 export const authService = {
   async login(email, password) {
-    const response = await axios.post(
-      `${API_URL}/auth/login`,
+    const response = await api.post(
+      "/auth/login",
       buildLoginPayload(email, password),
       {
         headers: {
