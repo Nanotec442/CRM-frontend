@@ -35,10 +35,12 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.nombre.trim() || !form.email.trim()) {
-      setError("Nombre y email son obligatorios.");
-      return;
-    }
+
+    if (!form.nombre.trim()) { setError("El nombre es obligatorio."); return; }
+    if (!form.email.trim()) { setError("El correo electrónico es obligatorio."); return; }
+    if (!form.telefono.trim()) { setError("El teléfono es obligatorio."); return; }
+    if (!form.empresa.trim()) { setError("La empresa es obligatoria."); return; }
+
     try {
       setLoading(true);
       setError(null);
@@ -53,8 +55,7 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full font-sans">
-      
-      {/* Header del form */}
+
       <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
         <h2 className="font-bold text-slate-900 text-lg">
           {clienteEditando ? "Editar Cliente" : "Registro Manual"}
@@ -102,6 +103,7 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
             value={form.telefono}
             onChange={handleChange}
             placeholder="+56 9 1234 5678"
+            required
           />
         </div>
 
@@ -110,7 +112,8 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
           name="empresa"
           value={form.empresa}
           onChange={handleChange}
-          placeholder="Nombre de la empresa (Opcional)"
+          placeholder="Nombre de la empresa"
+          required
         />
 
         <div className="space-y-1.5">
@@ -141,12 +144,8 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
             className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             {loading
-              ? clienteEditando
-                ? "Actualizando..."
-                : "Guardando..."
-              : clienteEditando
-              ? "Actualizar Cliente"
-              : "Guardar Cliente"}
+              ? clienteEditando ? "Actualizando..." : "Guardando..."
+              : clienteEditando ? "Actualizar Cliente" : "Guardar Cliente"}
           </button>
         </div>
       </form>
@@ -154,7 +153,6 @@ function ClienteForm({ clienteEditando, onGuardar, onCancelar }) {
   );
 }
 
-// ─── COMPONENTE REUTILIZABLE PARA INPUTS ───
 function Field({ label, name, type = "text", value, onChange, placeholder, required }) {
   return (
     <div className="space-y-1.5">

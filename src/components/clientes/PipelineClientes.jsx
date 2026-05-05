@@ -13,11 +13,10 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Mail, Phone, Building2, MoreVertical, DollarSign, Users,
   Fingerprint, Globe, UserCheck, PhoneCall, Calendar, Tag, Plus, X, Archive
-} from "lucide-react"; // Añadimos Archive
+} from "lucide-react";
 import { tarjetasService } from "../../services/tarjetasService";
-import { toast } from "react-toastify"; // Para las notificaciones
+import { toast } from "react-toastify";
 
-// ─── Paleta de columnas (Estética SaaS Profesional) ───────────────────────────
 const COLUMN_PALETTE = [
   { ring: "ring-slate-200", glow: "hover:ring-indigo-300", dot: "bg-slate-700", badge: "bg-slate-100 text-slate-700 border-slate-200" },
   { ring: "ring-slate-200", glow: "hover:ring-indigo-300", dot: "bg-indigo-500", badge: "bg-indigo-50 text-indigo-700 border-indigo-100" },
@@ -28,7 +27,6 @@ const COLUMN_PALETTE = [
 
 const getColumnPalette = (index) => COLUMN_PALETTE[index % COLUMN_PALETTE.length];
 
-// ─── Helpers de origen ────────────────────────────────────────────────────────
 const ORIGEN_CONFIG = {
   web: { label: "Web", Icon: Globe },
   referido: { label: "Referido", Icon: UserCheck },
@@ -40,7 +38,6 @@ const ORIGEN_CONFIG = {
 const getOrigenConfig = (origen) =>
   origen ? (ORIGEN_CONFIG[origen.toLowerCase()] ?? { label: origen, Icon: Tag }) : null;
 
-// ─── Helpers de cliente ───────────────────────────────────────────────────────
 const getClienteNombre = (c) => c?.nombre_completo ?? c?.nombre ?? "Sin nombre";
 const getClienteEmail = (c) => c?.email?.trim() ?? "";
 const getClienteTelefono = (c) => c?.telefono?.trim() ?? "";
@@ -52,9 +49,7 @@ const getInitials = (nombre) => {
   return words.length === 0 ? "SN" : words.map((w) => w[0]?.toUpperCase() ?? "").join("");
 };
 
-const AVATAR_COLORS = [
-  "bg-indigo-600", "bg-slate-700", "bg-blue-600", "bg-sky-600", "bg-cyan-600"
-];
+const AVATAR_COLORS = ["bg-indigo-600", "bg-slate-700", "bg-blue-600", "bg-sky-600", "bg-cyan-600"];
 const getAvatarColor = (nombre) => {
   let sum = 0;
   for (const ch of String(nombre)) sum += ch.charCodeAt(0);
@@ -69,7 +64,6 @@ const formatValorCLP = (valor) => {
   }).format(num);
 };
 
-// ─── Normalización de columnas UUID ───────────────────────────────────────────
 const normalizarColumnas = (data) => {
   const raw = Array.isArray(data) ? data : data?.columnas ?? [];
   return raw
@@ -84,7 +78,6 @@ const normalizarColumnas = (data) => {
     }));
 };
 
-// ─── Mover tarjeta en estado ──────────────────────────────────────────────────
 const moveTarjetaInState = (tarjetas, tarjetaId, targetStageId, overCardId) => {
   const currentIndex = tarjetas.findIndex((t) => String(t.id) === String(tarjetaId));
   if (currentIndex === -1) return tarjetas;
@@ -101,11 +94,10 @@ const moveTarjetaInState = (tarjetas, tarjetaId, targetStageId, overCardId) => {
   return next;
 };
 
-// ─── Modal (Estilo Dashboard) ─────────────────────────────────────────────────
 const NombreModalContenido = ({ titulo, valorInicial, onConfirm, onCancel }) => {
   const [valor, setValor] = useState(valorInicial ?? "");
   const inputRef = useRef(null);
-  
+
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 30);
     return () => clearTimeout(t);
@@ -166,7 +158,6 @@ const NombreModal = ({ visible, titulo, valorInicial, onConfirm, onCancel }) => 
   );
 };
 
-// ─── Header global ────────────────────────────────────────────────────────────
 const PipelineHeader = ({ totalLeads, totalValorGlobal, columnas }) => (
   <div className="space-y-4 mb-5 font-sans">
     <section>
@@ -175,35 +166,29 @@ const PipelineHeader = ({ totalLeads, totalValorGlobal, columnas }) => (
         Gestión visual de oportunidades comerciales y seguimiento de leads.
       </p>
     </section>
-
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-            <Users size={16} className="text-indigo-600" />
-            Total Leads
+            <Users size={16} className="text-indigo-600" /> Total Leads
           </p>
           <h2 className="mt-1.5 text-2xl font-bold text-slate-900">{totalLeads}</h2>
         </div>
       </div>
-
       {totalValorGlobal && (
         <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-              <DollarSign size={16} className="text-emerald-600" />
-              Volumen Total
+              <DollarSign size={16} className="text-emerald-600" /> Volumen Total
             </p>
             <h2 className="mt-1.5 text-2xl font-bold text-slate-900">{totalValorGlobal}</h2>
           </div>
         </div>
       )}
-
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-            <MoreVertical size={16} className="text-slate-400" />
-            Etapas Activas
+            <MoreVertical size={16} className="text-slate-400" /> Etapas Activas
           </p>
           <h2 className="mt-1.5 text-2xl font-bold text-slate-900">
             {columnas.length} <span className="text-base font-medium text-slate-400">/ 9</span>
@@ -214,7 +199,6 @@ const PipelineHeader = ({ totalLeads, totalValorGlobal, columnas }) => (
   </div>
 );
 
-// ─── Tarjeta visual (Textos ajustados para lectura) ───────────────────────────
 const TarjetaCard = ({ tarjeta, dragOverlay = false, onArchivar }) => {
   const cliente = tarjeta.cliente;
   const nombre = getClienteNombre(cliente);
@@ -229,31 +213,25 @@ const TarjetaCard = ({ tarjeta, dragOverlay = false, onArchivar }) => {
   return (
     <article
       className={`group relative bg-white border rounded-lg p-3.5 transition-all duration-200 cursor-grab active:cursor-grabbing
-        ${dragOverlay 
-          ? "rotate-2 shadow-xl border-indigo-400 ring-2 ring-indigo-400/20 scale-105 z-50" 
+        ${dragOverlay
+          ? "rotate-2 shadow-xl border-indigo-400 ring-2 ring-indigo-400/20 scale-105 z-50"
           : "border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"}`}
     >
       <div className="flex items-start gap-3 mb-2.5">
         <div className={`${avatarColor} shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-white text-sm font-bold`}>
           {getInitials(nombre)}
         </div>
-
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h4 className="text-sm font-semibold text-slate-900 truncate">{nombre}</h4>
-            {/* 👇 Botón de Archivar 👇 */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation(); // Evita que se inicie el Drag & Drop al hacer clic
-                onArchivar(tarjeta.id);
-              }}
+            <button
+              onClick={(e) => { e.stopPropagation(); onArchivar(tarjeta.id); }}
               title="Archivar oportunidad"
               className="text-slate-400 opacity-0 group-hover:opacity-100 hover:text-amber-600 hover:bg-amber-50 rounded p-1.5 transition-all shrink-0"
             >
               <Archive size={14} />
             </button>
           </div>
-
           {empresa && (
             <div className="flex items-center gap-1.5 mt-0.5">
               <Building2 size={12} className="text-slate-400 shrink-0" />
@@ -282,35 +260,26 @@ const TarjetaCard = ({ tarjeta, dragOverlay = false, onArchivar }) => {
               <Phone size={14} />
             </a>
           )}
-          <span className="text-xs text-slate-500 truncate ml-auto">
-            {email || telefono}
-          </span>
+          <span className="text-xs text-slate-500 truncate ml-auto">{email || telefono}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
         {origenCfg ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
-            <origenCfg.Icon size={12} />
-            {origenCfg.label}
+            <origenCfg.Icon size={12} /> {origenCfg.label}
           </span>
         ) : (
           <span className="text-[10px] text-slate-400 font-mono">
             #{String(tarjeta.id).slice(-6).toUpperCase()}
           </span>
         )}
-
-        {valorFmt && (
-          <span className="text-sm font-semibold text-emerald-600">
-            {valorFmt}
-          </span>
-        )}
+        {valorFmt && <span className="text-sm font-semibold text-emerald-600">{valorFmt}</span>}
       </div>
     </article>
   );
 };
 
-// ─── Tarjeta arrastrable ──────────────────────────────────────────────────────
 const SortableTarjeta = ({ tarjeta, stageId, onArchivar }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -331,7 +300,6 @@ const SortableTarjeta = ({ tarjeta, stageId, onArchivar }) => {
   );
 };
 
-// ─── Columna ──────────────────────────────────────────────────────────────────
 const ColumnDropZone = ({ columna, lista, activeStageId, onEdit, onDelete, onArchivarTarjeta }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `column:${columna.id}`,
@@ -346,10 +314,7 @@ const ColumnDropZone = ({ columna, lista, activeStageId, onEdit, onDelete, onArc
     <section
       ref={setNodeRef}
       className={`flex flex-col w-72 min-w-[288px] max-w-[288px] h-full rounded-xl border transition-colors duration-200
-        ${isActive
-          ? `bg-indigo-50/50 border-indigo-200`
-          : "bg-slate-50/50 border-slate-200"
-        }`}
+        ${isActive ? "bg-indigo-50/50 border-indigo-200" : "bg-slate-50/50 border-slate-200"}`}
     >
       <div className="p-3 border-b border-slate-200/50">
         <div className="flex items-center justify-between mb-1.5">
@@ -363,54 +328,34 @@ const ColumnDropZone = ({ columna, lista, activeStageId, onEdit, onDelete, onArc
               {columna.titulo}
             </button>
           </div>
-
           <div className="flex items-center gap-1.5">
             <span className={`text-xs font-medium px-2 py-0.5 rounded border ${columna.badge}`}>
               {lista.length}
             </span>
             {onDelete && (
-              <button
-                onClick={onDelete}
-                className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors"
-              >
+              <button onClick={onDelete} className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors">
                 <X size={14} />
               </button>
             )}
           </div>
         </div>
-
         <div className="flex items-center justify-between h-4">
           {totalFmt && lista.length > 0 ? (
-            <p className="text-xs text-slate-500">
-              Vol: <span className="font-medium text-slate-700">{totalFmt}</span>
-            </p>
+            <p className="text-xs text-slate-500">Vol: <span className="font-medium text-slate-700">{totalFmt}</span></p>
           ) : <span />}
-
-          {isActive && (
-            <p className="text-[10px] uppercase font-bold text-indigo-600">
-              Soltar aquí
-            </p>
-          )}
+          {isActive && <p className="text-[10px] uppercase font-bold text-indigo-600">Soltar aquí</p>}
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-        <SortableContext
-          items={lista.map((t) => `card:${t.id}`)}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={lista.map((t) => `card:${t.id}`)} strategy={verticalListSortingStrategy}>
           {lista.length === 0 ? (
             <div className={`h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-slate-400 ${isActive ? "border-indigo-300 bg-indigo-50/50" : "border-slate-200"}`}>
               <span className="text-sm font-medium">Sin tarjetas</span>
             </div>
           ) : (
             lista.map((tarjeta) => (
-              <SortableTarjeta 
-                key={tarjeta.id} 
-                tarjeta={tarjeta} 
-                stageId={columna.id} 
-                onArchivar={onArchivarTarjeta} 
-              />
+              <SortableTarjeta key={tarjeta.id} tarjeta={tarjeta} stageId={columna.id} onArchivar={onArchivarTarjeta} />
             ))
           )}
         </SortableContext>
@@ -442,17 +387,12 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
       tarjetasService.getColumnas(),
     ]);
     const columnasNormalizadas = normalizarColumnas(dataColumnas);
-    const rawTarjetas = Array.isArray(dataTablero)
-      ? dataTablero
-      : dataTablero?.tarjetas ?? [];
+    const rawTarjetas = Array.isArray(dataTablero) ? dataTablero : dataTablero?.tarjetas ?? [];
     const ids = new Set();
     const limpias = rawTarjetas.filter((t) => {
       const id = String(t?.id ?? "");
       if (!id || ids.has(id)) return false;
       ids.add(id);
-      
-      if (t.estado === "archivado" || t.activa === false) return false;
-      
       return true;
     });
     setColumnas(columnasNormalizadas);
@@ -475,34 +415,21 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
     cargarDatos();
   }, []);
 
-//  LÓGICA DE ARCHIVADO DE TARJETA 
+  // ── Archivado: optimistic UI + llamada real al backend ──────────────────
   const handleArchivarTarjeta = async (tarjetaId) => {
-    const confirm = window.confirm("¿Estás seguro de archivar esta oportunidad? Desaparecerá del tablero activo.");
-    if (!confirm) return;
+    const confirmado = window.confirm("¿Archivar esta oportunidad? Desaparecerá del tablero activo.");
+    if (!confirmado) return;
 
-    // 1. Buscamos la tarjeta actual para extraer su stage_id obligatorio
-    const tarjetaActual = tarjetas.find((t) => String(t.id) === String(tarjetaId));
-
-    if (!tarjetaActual) {
-      toast.error("No se pudo encontrar la tarjeta.");
-      return;
-    }
+    const snapshot = tarjetasRef.current;
+    setTarjetas((prev) => prev.filter((t) => String(t.id) !== String(tarjetaId)));
 
     try {
-      // 2. Le enviamos a FastAPI exactamente lo que pide
-      await tarjetasService.actualizarTarjeta(tarjetaId, { 
-        stage_id: tarjetaActual.stage_id, // Enviamos su columna actual para calmar a FastAPI
-        estado: "archivado",              // Tu variable para ocultarlo
-        activa: false                     // Por si acaso tu backend usa un booleano
-      });
-      
-      // 3. Eliminamos la tarjeta del estado local (Optimistic UI Update)
-      setTarjetas((prev) => prev.filter((t) => String(t.id) !== String(tarjetaId)));
-      
-      toast.success("Oportunidad archivada");
+      await tarjetasService.archivarTarjeta(tarjetaId);
+      toast.success("Oportunidad archivada.");
     } catch (err) {
-      console.error("Error al archivar la tarjeta:", err);
-      toast.error("No se pudo archivar la tarjeta. Intenta nuevamente.");
+      console.error("Error al archivar tarjeta:", err);
+      setTarjetas(snapshot);
+      toast.error(err?.response?.data?.detail || "No se pudo archivar. La tarjeta fue restaurada.");
     }
   };
 
@@ -516,11 +443,10 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
   }, [clientesReales]);
 
   const tarjetasConCliente = useMemo(
-    () =>
-      tarjetas.map((t) => ({
-        ...t,
-        cliente: clienteMap.get(String(t?.cliente_id ?? "")) ?? null,
-      })),
+    () => tarjetas.map((t) => ({
+      ...t,
+      cliente: clienteMap.get(String(t?.cliente_id ?? "")) ?? null,
+    })),
     [tarjetas, clienteMap]
   );
 
@@ -625,14 +551,12 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
     } catch (error) {
       console.error("Error al mover tarjeta:", error);
       setTarjetas((prev) =>
-        prev.map((t) =>
-          String(t.id) === String(tarjetaId) ? { ...t, stage_id: originStageId } : t
-        )
+        prev.map((t) => String(t.id) === String(tarjetaId) ? { ...t, stage_id: originStageId } : t)
       );
-      const detalle =
+      setErrorMovimiento(String(
         error?.response?.data?.detail ||
-        "No se pudo guardar el movimiento. La tarjeta volvió a su columna original.";
-      setErrorMovimiento(String(detalle));
+        "No se pudo guardar el movimiento. La tarjeta volvió a su columna original."
+      ));
     } finally {
       dragSnapshotRef.current = [];
       dragOriginStageRef.current = null;
@@ -642,9 +566,7 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
   const handleDragCancel = () => {
     setActiveId(null);
     setActiveStageId(null);
-    setTarjetas(
-      dragSnapshotRef.current.length ? dragSnapshotRef.current : tarjetasRef.current
-    );
+    setTarjetas(dragSnapshotRef.current.length ? dragSnapshotRef.current : tarjetasRef.current);
     dragSnapshotRef.current = [];
     dragOriginStageRef.current = null;
   };
@@ -661,18 +583,10 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
       const nueva = await tarjetasService.crearColumna({ nombre: limpio });
       setColumnas((prev) => [
         ...prev,
-        {
-          id: nueva.id,
-          titulo: nueva.nombre,
-          orden: nueva.orden ?? prev.length,
-          ...getColumnPalette(prev.length),
-        },
+        { id: nueva.id, titulo: nueva.nombre, orden: nueva.orden ?? prev.length, ...getColumnPalette(prev.length) },
       ]);
     } catch (error) {
-      console.error("Error al crear etapa:", error);
-      setErrorMovimiento(
-        String(error?.response?.data?.detail || "No se pudo crear la etapa.")
-      );
+      setErrorMovimiento(String(error?.response?.data?.detail || "No se pudo crear la etapa."));
     }
   };
 
@@ -684,31 +598,22 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
       return;
     }
     const columnasPrevias = columnas;
-    setColumnas((prev) =>
-      prev.map((col) => (col.id === id ? { ...col, titulo: limpio } : col))
-    );
+    setColumnas((prev) => prev.map((col) => (col.id === id ? { ...col, titulo: limpio } : col)));
     try {
       setErrorMovimiento("");
       await tarjetasService.editarColumna(id, { nombre: limpio });
       setTarjetas((prev) =>
-        prev.map((tarjeta) =>
-          tarjeta.stage_id === id ? { ...tarjeta, posicion_tablero: limpio } : tarjeta
-        )
+        prev.map((t) => t.stage_id === id ? { ...t, posicion_tablero: limpio } : t)
       );
     } catch (error) {
-      console.error("Error al editar etapa:", error);
       setColumnas(columnasPrevias);
-      setErrorMovimiento(
-        String(error?.response?.data?.detail || "No se pudo renombrar la etapa.")
-      );
+      setErrorMovimiento(String(error?.response?.data?.detail || "No se pudo renombrar la etapa."));
     }
   };
 
   const eliminarColumna = async (id) => {
     if (columnas.length <= 3) return;
-    const confirmado = window.confirm(
-      "Eliminar esta etapa moverá sus tarjetas a la primera columna. ¿Deseas continuar?"
-    );
+    const confirmado = window.confirm("Eliminar esta etapa moverá sus tarjetas a la primera columna. ¿Deseas continuar?");
     if (!confirmado) return;
     const primerId = columnas[0]?.id;
     if (!primerId || primerId === id) return;
@@ -716,33 +621,24 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
     const columnasPrevias = columnas;
     const tarjetasPrevias = tarjetas;
     setColumnas((prev) => prev.filter((col) => col.id !== id));
-    setTarjetas((prev) =>
-      prev.map((t) => (t.stage_id === id ? { ...t, stage_id: primerId } : t))
-    );
+    setTarjetas((prev) => prev.map((t) => (t.stage_id === id ? { ...t, stage_id: primerId } : t)));
     try {
       setErrorMovimiento("");
       await tarjetasService.eliminarColumna(id, primerId);
-      if (afectadas.length) {
-        await sincronizarTablero();
-      }
+      if (afectadas.length) await sincronizarTablero();
     } catch (error) {
-      console.error("Error al mover tarjetas afectadas:", error);
       setColumnas(columnasPrevias);
       setTarjetas(tarjetasPrevias);
-      setErrorMovimiento(
-        String(
-          error?.response?.data?.detail ||
-          "No se pudieron guardar algunos cambios de columna. Recarga la vista para sincronizar."
-        )
-      );
+      setErrorMovimiento(String(
+        error?.response?.data?.detail ||
+        "No se pudieron guardar algunos cambios de columna. Recarga la vista para sincronizar."
+      ));
     }
   };
 
   const activeTarjeta = activeId ? tarjetasById.get(String(activeId).replace("card:", "")) : null;
   const totalLeads = tarjetas.length;
-  const totalValorGlobal = formatValorCLP(
-    tarjetas.reduce((acc, t) => acc + (Number(t.valor_estimado) || 0), 0)
-  );
+  const totalValorGlobal = formatValorCLP(tarjetas.reduce((acc, t) => acc + (Number(t.valor_estimado) || 0), 0));
 
   if (cargando) {
     return (
@@ -754,18 +650,12 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
 
   return (
     <div className="flex h-[calc(100vh-90px)] min-h-[500px] w-full flex-col font-sans">
-      <PipelineHeader
-        totalLeads={totalLeads}
-        totalValorGlobal={totalValorGlobal}
-        columnas={columnas}
-      />
+      <PipelineHeader totalLeads={totalLeads} totalValorGlobal={totalValorGlobal} columnas={columnas} />
 
       {(errorCarga || errorMovimiento || tarjetasSinColumnaValida.length > 0) && (
         <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 shadow-sm">
           <span className="font-medium">
-            ⚠ {errorCarga ||
-              errorMovimiento ||
-              `${tarjetasSinColumnaValida.length} tarjeta(s) con stage_id sin columna activa.`}
+            ⚠ {errorCarga || errorMovimiento || `${tarjetasSinColumnaValida.length} tarjeta(s) con stage_id sin columna activa.`}
           </span>
         </div>
       )}
@@ -786,18 +676,16 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
                 columna={columna}
                 lista={tarjetasPorColumna.get(columna.id) ?? []}
                 activeStageId={activeStageId}
-                onEdit={() =>
-                  setModal({ tipo: "editar", id: columna.id, valorInicial: columna.titulo })
-                }
+                onEdit={() => setModal({ tipo: "editar", id: columna.id, valorInicial: columna.titulo })}
                 onDelete={columnas.length > 3 ? () => eliminarColumna(columna.id) : null}
-                onArchivarTarjeta={handleArchivarTarjeta} // Pasamos la función al dropzone
+                onArchivarTarjeta={handleArchivarTarjeta}
               />
             ))}
 
             {columnas.length < 9 && (
               <button
                 onClick={() => setModal({ tipo: "nueva" })}
-                className="group flex h-full min-h-[200px] w-[288px] flex-shrink-0 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
+                className="group flex h-full min-h-[200px] w-[288px] shrink-0 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white border border-slate-200 shadow-sm group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-colors">
                   <Plus size={20} />

@@ -22,6 +22,7 @@ export const reservasService = {
     return res.data;
   },
 
+  // El backend usa PATCH /{id}/cancelar — no existe DELETE
   async cancelar(reservaId) {
     const res = await api.patch(`/reservas/${reservaId}/cancelar`);
     return res.data;
@@ -32,11 +33,12 @@ export const reservasService = {
     return res.data;
   },
 
-  async eliminar(reservaId) {
-    const res = await api.delete(`/reservas/${reservaId}`);
+  async consultarDisponibilidad(payload) {
+    const res = await api.post("/reservas/disponibilidad", payload);
     return res.data;
   },
 
+  // ── Endpoints públicos (sin auth) ────────────────────────────────────────
   async listarActivosPublicos(tenantId) {
     const res = await api.get(`/reservas/publica/activos/${tenantId}`);
     return res.data;
@@ -49,11 +51,6 @@ export const reservasService = {
 
   async obtenerPublica(reservaId) {
     const res = await api.get(`/reservas/publica/${reservaId}`);
-    return res.data;
-  },
-
-  async consultarDisponibilidad(payload) {
-    const res = await api.post("/reservas/disponibilidad", payload);
     return res.data;
   },
 };

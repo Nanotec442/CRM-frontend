@@ -1,24 +1,29 @@
 import api from "./api";
 
-export const activosService = {
+const activosService = {
   async getActivos() {
-    return api.get("/reservas/activos");
+    const res = await api.get("/reservas/activos");
+    return res.data;
   },
 
   async getActivo(id) {
-    return api.get(`/reservas/activos/${id}`);
+    const res = await api.get(`/reservas/activos/${id}`);
+    return res.data;
   },
 
   async createActivo(data) {
-    return api.post("/reservas/activos", data);
+    const res = await api.post("/reservas/activos", data);
+    return res.data;
   },
 
   async updateActivo(id, data) {
-    return api.patch(`/reservas/activos/${id}`, data);
+    const res = await api.patch(`/reservas/activos/${id}`, data);
+    return res.data;
   },
 
   async desactivarActivo(id) {
-    return api.patch(`/reservas/activos/${id}/desactivar`);
+    const res = await api.patch(`/reservas/activos/${id}/desactivar`);
+    return res.data;
   },
 };
 

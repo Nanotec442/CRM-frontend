@@ -1,69 +1,81 @@
 import api from "./api";
 
-export const empresasService = {
-  async listarEmpresas() {
-    const res = await api.get("/empresas/");
-    return res.data;
+const empresasService = {
+
+  // ── Superadmin only ─────────────────────────────────────────────────────
+  // Estos métodos solo funcionan con token de superadmin del SaaS
+
+  listarTodasEmpresas() {
+    // GET /empresas/ → requiere requerir_superadmin
+    return api.get("/empresas/").then((r) => r.data);
   },
 
-  async crearEmpresa(payload) {
-    const res = await api.post("/empresas/crear", payload);
-    return res.data;
+  listarEmpresasActivas() {
+    // GET /empresas/listar → requiere requerir_superadmin
+    return api.get("/empresas/listar").then((r) => r.data);
   },
 
-  async listarEmpresasActivas() {
-    const res = await api.get("/empresas/listar");
-    return res.data;
+  crearEmpresa(payload) {
+    // POST /empresas/crear → requiere requerir_superadmin
+    return api.post("/empresas/crear", payload).then((r) => r.data);
   },
 
-  async obtenerEmpresa(tenantId) {
-    const res = await api.get(`/empresas/${tenantId}`);
-    return res.data;
+  obtenerEmpresa(tenantId) {
+    // GET /empresas/{tenant_id} → requiere requerir_superadmin
+    return api.get(`/empresas/${tenantId}`).then((r) => r.data);
   },
 
-  async eliminarEmpresa(tenantId) {
-    const res = await api.delete(`/empresas/${tenantId}`);
-    return res.data;
+  eliminarEmpresa(tenantId) {
+    // DELETE /empresas/{tenant_id} → requiere requerir_superadmin
+    return api.delete(`/empresas/${tenantId}`).then((r) => r.data);
   },
 
-  async modificarEmpresa(tenantId, payload) {
-    const res = await api.patch(`/empresas/${tenantId}`, payload);
-    return res.data;
+  modificarEmpresa(tenantId, payload) {
+    // PATCH /empresas/{tenant_id} → requiere requerir_superadmin
+    return api.patch(`/empresas/${tenantId}`, payload).then((r) => r.data);
   },
 
-  async verMiEmpresa(tenantId) {
-    const res = await api.get(`/empresas/mi-empresa/${tenantId}`);
-    return res.data;
+  // ── Tenant admin ─────────────────────────────────────────────────────────
+
+  verMiEmpresa(tenantId) {
+    // GET /empresas/mi-empresa/{tenant_id} → requiere get_current_user
+    return api.get(`/empresas/mi-empresa/${tenantId}`).then((r) => r.data);
   },
 
-  async registroEmpresa(payload) {
-    const res = await api.post("/empresas/registro-empresa", payload);
-    return res.data;
+  actualizarConfiguracionMiEmpresa(payload) {
+    // PATCH /empresas/mi-empresa/configuracion → requiere administrar_empresa
+    return api.patch("/empresas/mi-empresa/configuracion", payload).then((r) => r.data);
   },
 
-  async actualizarConfiguracionMiEmpresa(payload) {
-    const res = await api.patch("/empresas/mi-empresa/configuracion", payload);
-    return res.data;
+  registroEmpresa(payload) {
+    // POST /empresas/registro-empresa → público (sin auth)
+    return api.post("/empresas/registro-empresa", payload).then((r) => r.data);
   },
 
-  async crearSubusuario(payload) {
-    const res = await api.post("/empresas/", payload);
-    return res.data;
+  // ── Subusuarios (equipo) ─────────────────────────────────────────────────
+  // Requieren permiso: administrar_usuarios
+
+  listarSubusuarios() {
+    // GET /empresas/ → filtra automáticamente por tenant del token
+    // OJO: mismo endpoint que listarTodasEmpresas pero el backend
+    // distingue por el tipo de usuario en el token (superadmin vs tenant)
+    return api.get("/empresas/").then((r) => r.data);
   },
 
-  async listarSubusuarios() {
-    const res = await api.get("/empresas/");
-    return res.data;
+  crearSubusuario(payload) {
+    // POST /empresas/ → payload DEBE incluir role_id (obligatorio en el backend)
+    // { nombre, apellido, email, telefono, password, role_id }
+    return api.post("/empresas/", payload).then((r) => r.data);
   },
 
-  async modificarSubusuario(usuarioId, payload) {
-    const res = await api.patch(`/empresas/${usuarioId}`, payload);
-    return res.data;
+  modificarSubusuario(usuarioId, payload) {
+    // PATCH /empresas/{usuario_id}
+    return api.patch(`/empresas/${usuarioId}`, payload).then((r) => r.data);
   },
 
-  async eliminarSubusuario(usuarioId) {
-    const res = await api.delete(`/empresas/${usuarioId}`);
-    return res.data;
+  eliminarSubusuario(usuarioId) {
+    // DELETE /empresas/{usuario_id}
+    return api.delete(`/empresas/${usuarioId}`).then((r) => r.data);
   },
 };
 

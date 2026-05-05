@@ -4,17 +4,12 @@ import ClienteList from "./../../components/clientes/ClienteList";
 import PipelineClientes from "../../components/clientes/PipelineClientes";
 import NuevoClienteVista from "../../components/clientes/NuevoClienteVista";
 import { clientesService } from "../../services/clientesService";
-import { tarjetasService } from "../../services/tarjetasService"; // Importamos el servicio de tarjetas
+import { tarjetasService } from "../../services/tarjetasService";
 
-// --- IMPORTAMOS LOS COMPONENTES DE FIRMA ---
-import ModalFirmaLegal from "../../components/firmas/ModalFirmaLegal"; 
+import ModalFirmaLegal from "../../components/firmas/ModalFirmaLegal";
 import FirmaFisica from "../../components/firmas/FirmaFisica";
 import { toast } from "react-toastify";
 
-/**
- * Vista de administración de clientes.
- * Permite alternar entre un tablero visual (Pipeline), una lista detallada, la creación con IA y gestión de firmas.
- */
 function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [clienteEditando, setClienteEditando] = useState(null);
@@ -22,9 +17,8 @@ function Clientes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formVisible, setFormVisible] = useState(false);
-  const [vista, setVista] = useState("pipeline"); 
+  const [vista, setVista] = useState("pipeline");
 
-  // --- ESTADOS PARA LAS FIRMAS ---
   const [firmaLegalState, setFirmaLegalState] = useState({ isOpen: false, clienteId: null });
   const [firmaFisicaState, setFirmaFisicaState] = useState({ isOpen: false, clienteId: null });
 
@@ -33,17 +27,16 @@ function Clientes() {
       setLoading(true);
       setError(null);
       const data = await clientesService.listar();
-
       const raw = Array.isArray(data) ? data : data.clientes ?? [];
 
       const mapped = raw.map((c) => ({
         id: c.id ?? c.cliente_id,
-        nombre: c.nombre_completo, 
+        nombre: c.nombre_completo ?? c.nombre,
         email: c.email,
         telefono: c.telefono,
-        empresa: c.empresa,
-        notes: c.notas,
-        estado: c.estado,
+        empresa: c.empresa ?? "",
+        notas: c.notas ?? "",
+        estado: c.estado ?? "Activo",
       }));
 
       setClientes(mapped);
@@ -58,24 +51,34 @@ function Clientes() {
     cargarClientes();
   }, [cargarClientes]);
 
-  // --- MANEJADOR PRINCIPAL DE GUARDADO ---
+  // ── Guardar (crear o editar) ──────────────────────────────────────────────
   const handleGuardar = async (formData) => {
     try {
       if (clienteEditando) {
-        // --- FLUJO DE EDICIÓN ---
         const idActual = clienteEditando.id ?? clienteEditando.cliente_id;
-        const actualizado = await clientesService.modificar(idActual, formData);
-        
+
+        // Normalizar payload — soporta tanto "nombre" como "nombre_completo"
+        const payload = {
+          nombre_completo: formData.nombre ?? formData.nombre_completo,
+          email: formData.email,
+          telefono: formData.telefono ?? "",
+          empresa: formData.empresa ?? "",
+          rut_documento: formData.rut ?? formData.rut_documento ?? "",
+          estado: formData.estado,
+        };
+
+        const actualizado = await clientesService.modificar(idActual, payload);
+
         setClientes((prev) =>
           prev.map((c) =>
             (c.id ?? c.cliente_id) === idActual
               ? {
-                  id: actualizado.id,
-                  nombre: actualizado.nombre_completo,
+                  id: actualizado.id ?? idActual,
+                  nombre: actualizado.nombre_completo ?? payload.nombre_completo,
                   email: actualizado.email,
                   telefono: actualizado.telefono,
-                  empresa: actualizado.empresa,
-                  notas: actualizado.notas,
+                  empresa: actualizado.empresa ?? payload.empresa,
+                  notas: actualizado.notas ?? "",
                   estado: actualizado.estado,
                 }
               : c
@@ -84,52 +87,59 @@ function Clientes() {
         setClienteEditando(null);
         toast.success("Cliente actualizado correctamente.");
       } else {
-        // --- FLUJO DE CREACIÓN ---
-        const nuevo = await clientesService.crear(formData);
-        
-        // Aseguramos extraer el ID real (FastAPI suele usar cliente_id o id)
+        // Normalizar payload — soporta tanto ClienteForm como NuevoClienteVista
+        const payload = {
+          nombre: formData.nombre ?? formData.nombre_completo,
+          email: formData.email,
+          telefono: formData.telefono ?? "",
+          empresa: formData.empresa ?? "",
+          rut: formData.rut ?? formData.rut_documento ?? "",
+          origen: formData.origen ?? "manual",
+        };
+
+        const nuevo = await clientesService.crear(payload);
         const idRealCliente = nuevo.id ?? nuevo.cliente_id;
-        
+
         const mapped = {
           id: idRealCliente,
-          nombre: nuevo.nombre_completo,
+          nombre: nuevo.nombre_completo ?? payload.nombre,
           email: nuevo.email,
           telefono: nuevo.telefono,
-          empresa: nuevo.empresa,
-          notas: nuevo.notas,
-          estado: nuevo.estado,
+          empresa: nuevo.empresa ?? payload.empresa,
+          notas: "",
+          estado: nuevo.estado ?? "Nuevo",
         };
         setClientes((prev) => [mapped, ...prev]);
 
-        // ✨ Creación dinámica de la tarjeta en el Kanban ✨
+        // Crear tarjeta en el pipeline automáticamente
         try {
           const columnas = await tarjetasService.getColumnas();
           const columnasOrdenadas = columnas.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
           const primeraColumnaId = columnasOrdenadas[0]?.id;
-
           if (primeraColumnaId) {
             await tarjetasService.crearTarjeta({
               cliente_id: idRealCliente,
-              stage_id: primeraColumnaId
+              stage_id: primeraColumnaId,
             });
           }
         } catch (errTarjeta) {
           console.warn("No se pudo crear la tarjeta automática:", errTarjeta);
         }
+
         toast.success("Cliente creado y añadido al pipeline.");
       }
-      
+
       setFormVisible(false);
-      setVista("pipeline"); 
+      setVista("pipeline");
     } catch (err) {
-      setError("Error al procesar la solicitud: " + err.message);
+      toast.error(err.response?.data?.detail || "Error al procesar la solicitud.");
+      setError(err.response?.data?.detail || err.message);
     }
   };
 
-  // --- NUEVA FUNCIÓN: ENVIAR CLIENTE EXISTENTE AL PIPELINE ---
+  // ── Mover al pipeline manualmente ────────────────────────────────────────
   const handleMoverAPipeline = async (clienteId) => {
     try {
-      // 1. Buscamos la primera columna disponible
       const columnas = await tarjetasService.getColumnas();
       const columnasOrdenadas = columnas.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
       const primeraColumnaId = columnasOrdenadas[0]?.id;
@@ -139,25 +149,40 @@ function Clientes() {
         return;
       }
 
-      // 2. Creamos la tarjeta
       await tarjetasService.crearTarjeta({
         cliente_id: clienteId,
-        stage_id: primeraColumnaId
+        stage_id: primeraColumnaId,
       });
 
       toast.success("¡Oportunidad creada en el Pipeline!");
-      setVista("pipeline"); // Cambiamos de vista para ver el resultado
-
+      setVista("pipeline");
     } catch (err) {
-      console.error("Error al mover al pipeline:", err);
       toast.error(err.response?.data?.detail || "No se pudo crear la tarjeta en el tablero.");
+    }
+  };
+
+  // ── Activar / Desactivar cliente ─────────────────────────────────────────
+  // estaActivo se calcula en ClienteList solo con estados válidos (Activo/Nuevo)
+  // Ignoramos estados del pipeline que puedan haberse guardado en el campo estado
+  const handleToggleEstado = async (clienteId, estaActivo) => {
+    const nuevoEstado = estaActivo ? "Inactivo" : "Activo";
+    try {
+      await clientesService.modificar(clienteId, { estado: nuevoEstado });
+      setClientes((prev) =>
+        prev.map((c) =>
+          (c.id ?? c.cliente_id) === clienteId ? { ...c, estado: nuevoEstado } : c
+        )
+      );
+      toast.success(`Cliente ${nuevoEstado === "Activo" ? "activado" : "desactivado"} correctamente.`);
+    } catch (err) {
+      toast.error("No se pudo cambiar el estado del cliente.");
     }
   };
 
   const handleEditar = (cliente) => {
     setClienteEditando(cliente);
     setFormVisible(true);
-    setVista("lista"); 
+    setVista("lista");
   };
 
   const handleCancelar = () => {
@@ -165,14 +190,11 @@ function Clientes() {
     setFormVisible(false);
   };
 
-  // --- MANEJADORES DE FIRMA ---
   const handleGuardarFirmaFisica = async (imagenBase64) => {
     try {
-      console.log("Firma guardada para cliente:", firmaFisicaState.clienteId);
       toast.success("¡Firma guardada correctamente!");
       setFirmaFisicaState({ isOpen: false, clienteId: null });
     } catch (err) {
-      console.error("Error al guardar la firma física", err);
       toast.error("Hubo un error al guardar la firma.");
     }
   };
@@ -196,8 +218,8 @@ function Clientes() {
 
   return (
     <div className="space-y-8 font-sans">
-      
-      {/* Header y Selector de Vistas */}
+
+      {/* Header */}
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Clientes</h1>
@@ -206,7 +228,7 @@ function Clientes() {
             Tienes <span className="font-semibold">{clientes.length}</span> registros activos.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
@@ -231,7 +253,7 @@ function Clientes() {
             onClick={() => {
               setClienteEditando(null);
               setFormVisible(false);
-              setVista("nuevo"); 
+              setVista("nuevo");
             }}
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors shadow-sm"
           >
@@ -249,9 +271,8 @@ function Clientes() {
         </div>
       )}
 
-      {/* Renderizado Condicional de las 3 Vistas */}
+      {/* Vistas */}
       <section>
-        
         {vista === "pipeline" && (
           <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
             <PipelineClientes clientes={clientesFiltrados} />
@@ -260,9 +281,9 @@ function Clientes() {
 
         {vista === "nuevo" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <NuevoClienteVista 
-              onVolver={() => setVista("lista")} 
-              onGuardar={handleGuardar} 
+            <NuevoClienteVista
+              onVolver={() => setVista("lista")}
+              onGuardar={handleGuardar}
             />
           </div>
         )}
@@ -271,9 +292,6 @@ function Clientes() {
           <div className={`grid gap-6 ${formVisible ? "lg:grid-cols-[400px_1fr]" : "grid-cols-1"}`}>
             {formVisible && (
               <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 h-fit animate-in slide-in-from-left-4 duration-300">
-                <h2 className="text-xl font-semibold text-slate-900 mb-5">
-                  Editar Cliente
-                </h2>
                 <ClienteForm
                   clienteEditando={clienteEditando}
                   onGuardar={handleGuardar}
@@ -292,32 +310,29 @@ function Clientes() {
                 onNuevo={() => { setClienteEditando(null); setVista("nuevo"); }}
                 onFirmarLegal={(id) => setFirmaLegalState({ isOpen: true, clienteId: id })}
                 onFirmarFisica={(id) => setFirmaFisicaState({ isOpen: true, clienteId: id })}
-                
-                // INTEGRACIÓN DEL BOTÓN DE PIPELINE
                 onMoverAPipeline={handleMoverAPipeline}
+                onToggleEstado={handleToggleEstado}
               />
             </div>
           </div>
         )}
-
       </section>
 
-      {/* --- MODALES DE FIRMA --- */}
-      <ModalFirmaLegal 
-        isOpen={firmaLegalState.isOpen} 
+      {/* Modales de firma */}
+      <ModalFirmaLegal
+        isOpen={firmaLegalState.isOpen}
         onClose={() => setFirmaLegalState({ isOpen: false, clienteId: null })}
-        reservaId={firmaLegalState.clienteId} 
+        reservaId={firmaLegalState.clienteId}
       />
 
       {firmaFisicaState.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <FirmaFisica 
+          <FirmaFisica
             onGuardar={handleGuardarFirmaFisica}
             onCancelar={() => setFirmaFisicaState({ isOpen: false, clienteId: null })}
           />
         </div>
       )}
-
     </div>
   );
 }

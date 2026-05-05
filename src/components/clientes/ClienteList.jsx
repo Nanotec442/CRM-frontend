@@ -1,44 +1,41 @@
 import React, { useMemo } from "react";
-import { Edit2, PenTool, FileSignature, KanbanSquare } from "lucide-react"; // Añadido KanbanSquare
+import { Edit2, PenTool, FileSignature, KanbanSquare, ToggleLeft, ToggleRight } from "lucide-react";
 
-// Añadida la prop onMoverAPipeline
-function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNuevo, onFirmarFisica, onFirmarLegal, onMoverAPipeline }) {
-  // Filtramos clientes duplicados usando una clave única (id, email o nombre+telefono)
+function ClienteList({
+  clientes,
+  loading,
+  onEditar,
+  busqueda,
+  setBusqueda,
+  onNuevo,
+  onFirmarFisica,
+  onFirmarLegal,
+  onMoverAPipeline,
+  onToggleEstado,  // ← NUEVO: recibe función para activar/desactivar
+}) {
   const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
-
     const seen = new Set();
     const resultado = [];
-
     for (const c of clientes) {
       if (!c) continue;
-
-      const key =
-        c.id ??
-        c.cliente_id ??
-        c.email ??
-        `${c.nombre}-${c.telefono}`;
-
+      const key = c.id ?? c.cliente_id ?? c.email ?? `${c.nombre}-${c.telefono}`;
       if (!key) continue;
-
       if (!seen.has(key)) {
         seen.add(key);
         resultado.push(c);
       }
     }
-
     return resultado;
   }, [clientes]);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden font-sans">
-      
-      {/* --- CABECERA Y BUSCADOR --- */}
+
+      {/* Buscador */}
       <div className="px-6 py-4 border-b border-slate-100">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-            🔍
-          </span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
           <input
             type="text"
             placeholder="Buscar por nombre, email o empresa..."
@@ -58,7 +55,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         </div>
       </div>
 
-      {/* --- TABLA DE CLIENTES --- */}
+      {/* Tabla */}
       <div className="overflow-x-auto">
         {loading ? (
           <SkeletonTable />
@@ -68,29 +65,17 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Contacto
-                </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Empresa
-                </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Acciones
-                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Empresa</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {clientesUnicos.map((c) => {
                 const id = c.id ?? c.cliente_id ?? c.email ?? `${c.nombre}-${c.telefono}`;
                 const nombreSeguro = c.nombre ?? "Sin nombre";
-
-                // Extraemos las iniciales para el avatar
                 const iniciales = nombreSeguro
                   .split(" ")
                   .slice(0, 2)
@@ -98,24 +83,23 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                   .join("")
                   .toUpperCase();
 
+                const estadoActual = (c.estado ?? "Activo").toLowerCase();
+                const estaActivo = estadoActual === "activo" || estadoActual === "activa" || estadoActual === "nuevo";
+
                 return (
-                  <tr
-                    key={String(id)}
-                    className="hover:bg-slate-50/80 transition-colors group"
-                  >
-                    {/* Nombre y Avatar */}
+                  <tr key={String(id)} className="hover:bg-slate-50/80 transition-colors group">
+
+                    {/* Nombre */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
                           {iniciales}
                         </div>
-                        <span className="font-semibold text-slate-900">
-                          {c.nombre}
-                        </span>
+                        <span className="font-semibold text-slate-900">{c.nombre}</span>
                       </div>
                     </td>
 
-                    {/* Información de contacto */}
+                    {/* Contacto */}
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         <div className="text-slate-600 font-medium">{c.email}</div>
@@ -129,26 +113,39 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                     <td className="px-6 py-4 whitespace-nowrap">
                       {c.empresa ? (
                         <span className="font-medium text-slate-700 flex items-center gap-1.5">
-                          <span className="text-slate-400">🏢</span> {c.empresa}
+                          <span className="text-slate-400"></span> {c.empresa}
                         </span>
                       ) : (
                         <span className="text-slate-400 text-xs">Sin empresa</span>
                       )}
                     </td>
 
-                    {/* Estado del cliente */}
+                    {/* Estado */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <EstadoBadge estado={c.estado ?? c.status} />
+                      <EstadoBadge estado={c.estado} />
                     </td>
 
                     {/* Acciones */}
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                        
-                        {/* 👇 NUEVO BOTÓN: Enviar al Pipeline 👇 */}
+
+                        {/* Activar / Desactivar */}
+                        <button
+                          onClick={() => onToggleEstado(c.id ?? c.cliente_id, estaActivo)}
+                          title={estaActivo ? "Desactivar cliente" : "Activar cliente"}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            estaActivo
+                              ? "text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                              : "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50"
+                          }`}
+                        >
+                          {estaActivo ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                        </button>
+
+                        {/* Pipeline */}
                         <button
                           onClick={() => onMoverAPipeline(c.id ?? c.cliente_id)}
-                          title="Crear Oportunidad (Enviar al Pipeline)"
+                          title="Crear Oportunidad en Pipeline"
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <KanbanSquare size={18} />
@@ -170,7 +167,7 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
                           <FileSignature size={18} />
                         </button>
 
-                        <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                        <div className="w-px h-4 bg-slate-200 mx-1" />
 
                         <button
                           onClick={() => onEditar(c)}
@@ -189,7 +186,6 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
         )}
       </div>
 
-      {/* --- PIE DE TABLA (Contador de resultados) --- */}
       {!loading && clientesUnicos.length > 0 && (
         <div className="px-6 py-3.5 border-t border-slate-100 text-xs font-medium text-slate-500 bg-slate-50/30">
           {clientesUnicos.length} resultado{clientesUnicos.length !== 1 ? "s" : ""}
@@ -200,20 +196,27 @@ function ClienteList({ clientes, loading, onEditar, busqueda, setBusqueda, onNue
   );
 }
 
-// --- COMPONENTES AUXILIARES ---
+// Estados válidos del cliente — cualquier otro valor se trata como "Nuevo"
+const ESTADOS_VALIDOS = ["activo", "activa", "inactivo", "archivado", "prospecto", "nuevo"];
 
-// Renderiza un badge visual dependiendo del estado del cliente
 function EstadoBadge({ estado }) {
   const map = {
-    activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    activa: { label: "Activo", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    inactivo: { label: "Inactivo", cls: "bg-slate-100 text-slate-600 border-slate-200" },
-    prospecto: { label: "Prospecto", cls: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    activo:    { label: "Activo",    cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    activa:    { label: "Activo",    cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    nuevo:     { label: "Nuevo",     cls: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    inactivo:  { label: "Inactivo",  cls: "bg-slate-100 text-slate-600 border-slate-200" },
+    archivado: { label: "Archivado", cls: "bg-rose-50 text-rose-600 border-rose-200" },
+    prospecto: { label: "Prospecto", cls: "bg-amber-50 text-amber-700 border-amber-200" },
   };
-  
-  const key = (estado ?? "activo").toLowerCase();
-  const { label, cls } = map[key] ?? map["activo"];
-  
+
+  const key = (estado ?? "nuevo").toLowerCase();
+
+  // Si el estado no es un valor válido (ej: nombre de columna del pipeline), mostrar "Nuevo"
+  const esValido = ESTADOS_VALIDOS.includes(key);
+  const { label, cls } = esValido
+    ? map[key]
+    : { label: "Nuevo", cls: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${cls}`}>
       {label}
@@ -221,7 +224,6 @@ function EstadoBadge({ estado }) {
   );
 }
 
-// Vista de carga mientras se obtienen los datos de la API
 function SkeletonTable() {
   return (
     <div className="divide-y divide-slate-50">
@@ -240,7 +242,6 @@ function SkeletonTable() {
   );
 }
 
-// Mensaje mostrado cuando la tabla está vacía o la búsqueda no arroja resultados
 function EmptyState({ busqueda, onNuevo }) {
   return (
     <div className="py-20 text-center flex flex-col items-center justify-center">

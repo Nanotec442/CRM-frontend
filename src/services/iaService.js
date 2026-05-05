@@ -12,7 +12,10 @@ export const iaService = {
   },
 
   async entrenarPdf(formData) {
-    const res = await api.post("/entrenar/pdf", formData);
+    // FormData requiere que Axios maneje el Content-Type automáticamente
+    const res = await api.post("/entrenar/pdf", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 
@@ -21,18 +24,25 @@ export const iaService = {
     return res.data;
   },
 
-  async cargaInteligenteClientes(payload) {
-    const res = await api.post("/clientes/carga-inteligente", payload);
+  async cargaInteligenteClientes(formData) {
+
+    const res = await api.post("/clientes/carga-inteligente", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 
-  async cargaInteligenteActivos(payload) {
-    const res = await api.post("/activos/carga-inteligente", payload);
+  async cargaInteligenteActivos(formData) {
+    const res = await api.post("/activos/carga-inteligente", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 
   async cargaMixtaDocumentos(formData) {
-    const res = await api.post("/documentos/carga-mixta", formData);
+    const res = await api.post("/documentos/carga-mixta", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 };

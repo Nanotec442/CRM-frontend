@@ -1,16 +1,15 @@
 import api from "./api";
 
 const getTenantId = () => localStorage.getItem("tenant_id");
+
 const normalizarEtapa = (etapa, index) => {
   if (!etapa) return null;
   if (typeof etapa === "string") {
     const nombre = etapa.trim();
     return nombre ? { nombre, orden: index } : null;
   }
-
   const nombre = String(etapa.nombre ?? etapa.titulo ?? "").trim();
   if (!nombre) return null;
-
   return {
     nombre,
     orden: Number.isFinite(etapa.orden) ? etapa.orden : index,
@@ -19,6 +18,7 @@ const normalizarEtapa = (etapa, index) => {
 };
 
 export const tarjetasService = {
+
   async getTablero() {
     const res = await api.get("/crm/tablero");
     return res.data;
@@ -31,7 +31,7 @@ export const tarjetasService = {
 
   async actualizarColumnas(columnas) {
     const etapas = Array.isArray(columnas)
-      ? columnas.map((columna, index) => normalizarEtapa(columna, index)).filter(Boolean)
+      ? columnas.map((col, i) => normalizarEtapa(col, i)).filter(Boolean)
       : [];
     const res = await api.put("/crm/configuracion/tablero", { etapas });
     return res.data;
@@ -55,29 +55,35 @@ export const tarjetasService = {
   },
 
   async eliminarColumna(stageId, destinoStageId) {
-    const res = await api.delete(`/crm/configuracion/tablero/etapas/${stageId}`, {
-      data: { destino_stage_id: destinoStageId },
-    });
+    const res = await api.delete(
+      `/crm/configuracion/tablero/etapas/${stageId}`,
+      { data: { destino_stage_id: destinoStageId } }
+    );
     return res.data;
   },
 
   async crearTarjeta(payload) {
     const res = await api.post("/crm/tarjetas", {
       tenant_id: payload.tenant_id ?? getTenantId(),
-      ...payload,
+      cliente_id: payload.cliente_id,
+      stage_id: payload.stage_id,
     });
     return res.data;
   },
 
   async moverTarjeta(tarjetaId, stageId) {
+    // Solo mueve de columna — envía únicamente stage_id
     const res = await api.patch(`/crm/tarjetas/${tarjetaId}/mover`, {
       stage_id: stageId,
     });
     return res.data;
   },
 
-  async actualizarTarjeta(tarjetaId, payload) {
-    const res = await api.patch(`/crm/tarjetas/${tarjetaId}`, payload);
+  async archivarTarjeta(tarjetaId) {
+    // Envía activa=false — el backend filtra estas en GET /crm/tablero
+    const res = await api.patch(`/crm/tarjetas/${tarjetaId}`, {
+      activa: false,
+    });
     return res.data;
   },
 };
