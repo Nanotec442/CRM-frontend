@@ -158,7 +158,7 @@ const Configuracion = () => {
         return <DocumentosConfig onAIComplete={handleAIFill} />;
       case "preferencias":
         return <PreferenciasConfig form={form} handleChange={handleChange} />;
-      case "roles": // NUEVO: Añadimos el case para roles
+      case "roles":
         return <RolesConfig />;
       case "seguridad": 
         return <EntrenarIA />;
