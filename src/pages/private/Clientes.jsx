@@ -308,8 +308,6 @@ function Clientes() {
                 busqueda={busqueda}
                 setBusqueda={setBusqueda}
                 onNuevo={() => { setClienteEditando(null); setVista("nuevo"); }}
-                onFirmarLegal={(id) => setFirmaLegalState({ isOpen: true, clienteId: id })}
-                onFirmarFisica={(id) => setFirmaFisicaState({ isOpen: true, clienteId: id })}
                 onMoverAPipeline={handleMoverAPipeline}
                 onToggleEstado={handleToggleEstado}
               />

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Edit2, PenTool, FileSignature, KanbanSquare, ToggleLeft, ToggleRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Edit2, KanbanSquare, ToggleLeft, ToggleRight, ExternalLink } from "lucide-react";
 
 function ClienteList({
   clientes,
@@ -8,11 +9,10 @@ function ClienteList({
   busqueda,
   setBusqueda,
   onNuevo,
-  onFirmarFisica,
-  onFirmarLegal,
   onMoverAPipeline,
-  onToggleEstado,  // ← NUEVO: recibe función para activar/desactivar
+  onToggleEstado,
 }) {
+  const navigate = useNavigate();
   const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
     const seen = new Set();
@@ -95,7 +95,12 @@ function ClienteList({
                         <div className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
                           {iniciales}
                         </div>
-                        <span className="font-semibold text-slate-900">{c.nombre}</span>
+                        <button
+                          onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
+                          className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors text-left"
+                        >
+                          {c.nombre}
+                        </button>
                       </div>
                     </td>
 
@@ -113,7 +118,7 @@ function ClienteList({
                     <td className="px-6 py-4 whitespace-nowrap">
                       {c.empresa ? (
                         <span className="font-medium text-slate-700 flex items-center gap-1.5">
-                          <span className="text-slate-400"></span> {c.empresa}
+                          <span className="text-slate-400">🏢</span> {c.empresa}
                         </span>
                       ) : (
                         <span className="text-slate-400 text-xs">Sin empresa</span>
@@ -151,24 +156,18 @@ function ClienteList({
                           <KanbanSquare size={18} />
                         </button>
 
-                        <button
-                          onClick={() => onFirmarFisica(c.id ?? c.cliente_id)}
-                          title="Firma Rápida en Pantalla"
-                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        >
-                          <PenTool size={18} />
-                        </button>
-
-                        <button
-                          onClick={() => onFirmarLegal(c.id ?? c.cliente_id)}
-                          title="Enviar Contrato Legal"
-                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        >
-                          <FileSignature size={18} />
-                        </button>
-
                         <div className="w-px h-4 bg-slate-200 mx-1" />
 
+                        {/* Ver perfil */}
+                        <button
+                          onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
+                          title="Ver perfil completo"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        >
+                          <ExternalLink size={18} />
+                        </button>
+
+                        {/* Editar */}
                         <button
                           onClick={() => onEditar(c)}
                           title="Editar Cliente"
