@@ -10,6 +10,7 @@ import Register from "../pages/public/Register";
 import ForgotPassword from "../pages/public/ForgotPassword";
 import ResetPassword from "../pages/public/ResetPassword";
 import RetornoWebpay from "../pages/public/RetornoWebpay";
+import LandingReservas from "../pages/public/LandingReservas";
 
 // Páginas privadas
 import Dashboard from "../pages/private/Dashboard";
@@ -36,6 +37,7 @@ function AppRouter() {
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="reset-password" element={<ResetPassword />} />
           <Route path="retorno-pago" element={<RetornoWebpay />} />
+          <Route path="reservar/:tenantId" element={<LandingReservas />} />
         </Route>
 
         {/* ── Rutas Privadas ── */}

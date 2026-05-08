@@ -9,7 +9,8 @@ import EmpresaConfig from "../../components/configuracion/EmpresaConfig";
 import PreferenciasConfig from "../../components/configuracion/PreferenciasConfig";
 import EntrenarIA from "../../components/configuracion/EntrenarIA"; 
 import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
-import RolesConfig from "../../components/configuracion/RolesConfig"; // NUEVO: Importamos el componente de roles
+import RolesConfig from "../../components/configuracion/RolesConfig";
+import ReservasOnlineConfig from "../../components/configuracion/ReservasOnlineConfig";
 
 // Importamos el servicio de empresas
 import empresasService from "../../services/empresasService";
@@ -160,6 +161,8 @@ const Configuracion = () => {
         return <PreferenciasConfig form={form} handleChange={handleChange} />;
       case "roles":
         return <RolesConfig />;
+      case "reservas_online":
+        return <ReservasOnlineConfig />;
       case "seguridad": 
         return <EntrenarIA />;
       default:
@@ -168,7 +171,7 @@ const Configuracion = () => {
   };
 
   // Para ocultar el botón general de guardar en la pestaña de roles (ya que los roles se guardan solos)
-  const ocultarBotonGuardar = ["documentos", "seguridad", "roles"].includes(active) || isProcessing;
+  const ocultarBotonGuardar = ["documentos", "seguridad", "roles", "reservas_online"].includes(active) || isProcessing;                                                           
 
   return (
     <div className="space-y-8 font-sans pb-10 animate-in fade-in duration-500">

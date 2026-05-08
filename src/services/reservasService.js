@@ -39,6 +39,11 @@ export const reservasService = {
   },
 
   // ── Endpoints públicos (sin auth) ────────────────────────────────────────
+  async resolverSlug(slug) {
+    const res = await api.get(`/reservas/publica/resolver/${slug}`);
+    return res.data;
+  },
+
   async listarActivosPublicos(tenantId) {
     const res = await api.get(`/reservas/publica/activos/${tenantId}`);
     return res.data;

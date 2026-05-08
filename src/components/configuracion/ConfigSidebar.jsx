@@ -1,11 +1,12 @@
 export default function ConfigSidebar({ active, setActive }) {
   const menuItems = [
-    { id: "perfil", label: "Perfil de Usuario", icon: "👤" },
-    { id: "empresa", label: "Datos de Empresa", icon: "🏢" },
-    { id: "roles", label: "Roles y Permisos", icon: "🛡️" },    
-    { id: "documentos", label: "Carga Inteligente de Datos", icon: "📄" },
-    { id: "seguridad", label: "Entrenar IA", icon: "📜" },
-    { id: "preferencias", label: "Conectar a WhatsApp", icon: "✅" },
+    { id: "perfil",       label: "Perfil de Usuario",          icon: "👤" },
+    { id: "empresa",      label: "Datos de Empresa",           icon: "🏢" },
+    { id: "roles",        label: "Roles y Permisos",           icon: "🛡️" },
+    { id: "reservas_online", label: "Reservas Online",         icon: "🔗" },
+    { id: "documentos",   label: "Carga Inteligente de Datos", icon: "📄" },
+    { id: "seguridad",    label: "Entrenar IA",                icon: "📜" },
+    { id: "preferencias", label: "Conectar a WhatsApp",        icon: "✅" },
   ];
 
   return (

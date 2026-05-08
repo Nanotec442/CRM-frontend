@@ -1,26 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { Package, Tag, Activity, FileText, Save, Loader2, CheckCircle, AlertCircle, ArrowLeft, UploadCloud, HelpCircle, Barcode } from 'lucide-react';
-import { toast } from 'react-toastify'; // Agregamos las notificaciones elegantes
-
+import { Package, Tag, Activity, FileText, Save, Loader2, AlertCircle, ArrowLeft, HelpCircle, Barcode } from 'lucide-react';
+import { toast } from 'react-toastify';
 import iaService from "../../services/iaService";
 
 function NuevoActivoVista({ onGuardar, onVolver }) {
-  // --- ESTADOS DEL FORMULARIO ---
   const [formData, setFormData] = useState({
+    sku: "",
     nombre: "",
     tipo: "",
     estado: "Operativo",
-    tiempo_buffer_minutos: "",
-    precio_base: ""
+    buffer_limpieza_minutos: "",
+    precio_base: "",
   });
 
-  // --- ESTADOS DE LA IA ---
   const [dragActive, setDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
 
-  // --- MANEJADORES DE ARCHIVOS ---
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -32,23 +29,16 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      procesarArchivoIA(e.dataTransfer.files[0]);
-    }
+    if (e.dataTransfer.files?.[0]) procesarArchivoIA(e.dataTransfer.files[0]);
   };
 
-  const handleChange = (e) => {
+  const handleFileChange = (e) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      procesarArchivoIA(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) procesarArchivoIA(e.target.files[0]);
   };
 
-  // --- LÓGICA DE API CON AXIOS (Carga Inteligente de Activos) ---
   const procesarArchivoIA = async (file) => {
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError("El archivo excede el límite de 10MB permitido.");
+    if (file.size > 10 * 1024 * 1024) {
       toast.error("El archivo excede el límite de 10MB permitido.");
       return;
     }
@@ -60,37 +50,28 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     payload.append('archivo', file);
 
     try {
-      // ✅ Axios inyecta el token y hace la petición limpiamente
       const data = await iaService.cargaInteligenteActivos(payload);
-      
-      if (data.datos && data.datos.activos && data.datos.activos.length > 0) {
+
+      if (data.datos?.activos?.length > 0) {
         const info = data.datos.activos[0];
         setFormData(prev => ({
           ...prev,
-          nombre: info.nombre || prev.nombre,
-          tipo: info.tipo || prev.tipo,
-          estado: info.estado || prev.estado,
-          tiempo_buffer_minutos: info.tiempo_buffer_minutos || prev.tiempo_buffer_minutos,
-          precio_base: info.precio_base || prev.precio_base
+          sku:                    info.sku                    || prev.sku,
+          nombre:                 info.nombre                 || prev.nombre,
+          tipo:                   info.tipo                   || prev.tipo,
+          estado:                 info.estado                 || prev.estado,
+          buffer_limpieza_minutos: info.buffer_limpieza_minutos || prev.buffer_limpieza_minutos,
+          precio_base:            info.precio_base            || prev.precio_base,
         }));
-
         toast.success("¡Datos del activo extraídos con éxito!");
       }
-
     } catch (err) {
-      console.error("Error en IA:", err);
-      
-      // ✅ Manejo de errores estilo Axios
-      if (err.response) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          toast.error("Sesión inválida. Inicia sesión nuevamente.");
-        } else {
-          const errMsg = err.response.data?.detail || "Error al procesar el documento.";
-          setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
-          toast.error("La IA no pudo procesar este documento.");
-        }
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        toast.error("Sesión inválida. Inicia sesión nuevamente.");
       } else {
-        toast.error("Error de conexión. Revisa tu internet.");
+        const errMsg = err.response?.data?.detail || "Error al procesar el documento.";
+        setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+        toast.error("La IA no pudo procesar este documento.");
       }
     } finally {
       setIsProcessing(false);
@@ -103,10 +84,37 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleGuardar = async () => {
+    if (!formData.nombre.trim()) {
+      setError("El nombre del activo es obligatorio.");
+      toast.error("El nombre del activo es obligatorio.");
+      return;
+    }
+    if (!formData.sku.trim()) {
+      setError("El SKU es obligatorio.");
+      toast.error("El SKU es obligatorio.");
+      return;
+    }
+    if (!formData.tipo.trim()) {
+      setError("El tipo/categoría es obligatorio.");
+      toast.error("El tipo/categoría es obligatorio.");
+      return;
+    }
+
+    await onGuardar({
+      sku:                    formData.sku.trim(),
+      nombre:                 formData.nombre.trim(),
+      tipo:                   formData.tipo.trim(),
+      estado:                 formData.estado,
+      buffer_limpieza_minutos: formData.buffer_limpieza_minutos ? Number(formData.buffer_limpieza_minutos) : 0,
+      precio_base:            formData.precio_base ? Number(formData.precio_base) : 0,
+    });
+  };
+
   return (
     <div className="max-w-6xl w-full mx-auto space-y-6 animate-in fade-in duration-500 font-sans pb-10">
-      
-      <button 
+
+      <button
         onClick={onVolver}
         className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm"
       >
@@ -115,8 +123,8 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-        
-        {/* --- COLUMNA IZQUIERDA: Módulos de IA (2/5) --- */}
+
+        {/* Columna izquierda — IA */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
             <div className="flex justify-between items-center mb-4">
@@ -125,13 +133,13 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                 Powered by AI
               </span>
             </div>
-            
+
             <p className="text-slate-500 text-sm mb-6 leading-relaxed">
               Sube facturas de compra, garantías o manuales técnicos. Extraeremos los datos del equipo por ti.
             </p>
-            
-            <div 
-              className={`relative border-2 border-dashed rounded-xl p-8 md:p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-55
+
+            <div
+              className={`relative border-2 border-dashed rounded-xl p-8 md:p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-[220px]
                 ${dragActive ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'}
                 ${isProcessing ? 'opacity-70 pointer-events-none' : ''}`}
               onDragEnter={handleDrag}
@@ -151,9 +159,12 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                     <span className="text-indigo-600 font-semibold cursor-pointer">Haz clic para subir</span> o arrastra y suelta
                   </p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">PDF, JPG, PNG (MÁX. 10MB)</p>
-                  <input 
-                    ref={inputRef} type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                    onChange={handleChange} accept=".pdf,.docx,.jpg,.jpeg,.png" 
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={handleFileChange}
+                    accept=".pdf,.docx,.jpg,.jpeg,.png"
                   />
                 </>
               )}
@@ -166,13 +177,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
               </div>
             ) : (
               <div className="mt-6 flex items-center gap-2.5">
-                <div className="relative flex h-2.5 w-2.5">
-                  {isProcessing ? (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500 animate-pulse"></span>
-                  ) : (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  )}
-                </div>
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isProcessing ? "bg-indigo-500 animate-pulse" : "bg-emerald-500"}`} />
                 <span className="text-sm text-slate-500 italic font-medium">
                   {isProcessing ? "Extrayendo especificaciones..." : "IA lista para procesar"}
                 </span>
@@ -193,9 +198,8 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
           </div>
         </div>
 
-        {/* --- COLUMNA DERECHA: Formulario (3/5) --- */}
-        <div className="lg:col-span-3 relative">
-          
+        {/* Columna derecha — Formulario */}
+        <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
@@ -204,31 +208,34 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
               </h3>
             </div>
 
-            {/* FORMULARIO */}
-            <form className="p-6 md:p-8 space-y-6">
+            <div className="p-6 md:p-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Nombre del Activo */}
-                <div className="md:col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre del Activo *</label>
+
+                {/* SKU — obligatorio */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    SKU <span className="text-rose-500">*</span>
+                  </label>
                   <div className="relative">
-                    <Package className="absolute left-3.5 top-3.5 text-slate-300" size={18} />
-                    <input 
-                      name="nombre"
-                      value={formData.nombre}
+                    <Barcode className="absolute left-3.5 top-3.5 text-slate-300" size={18} />
+                    <input
+                      name="sku"
+                      value={formData.sku}
                       onChange={handleInputChange}
                       className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-700 text-sm font-medium"
-                      placeholder="Ej: Sala 1, Retroexcavadora..."
+                      placeholder="Ej: SALA-001, VEH-042..."
                     />
                   </div>
                 </div>
 
-                {/* Tipo / Categoría */}
+                {/* Tipo */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Categoría / Tipo</label>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Categoría / Tipo <span className="text-rose-500">*</span>
+                  </label>
                   <div className="relative">
                     <Tag className="absolute left-3.5 top-3.5 text-slate-300" size={18} />
-                    <input 
+                    <input
                       name="tipo"
                       value={formData.tipo}
                       onChange={handleInputChange}
@@ -238,12 +245,29 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                   </div>
                 </div>
 
+                {/* Nombre */}
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Nombre del Activo <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Package className="absolute left-3.5 top-3.5 text-slate-300" size={18} />
+                    <input
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-700 text-sm font-medium"
+                      placeholder="Ej: Sala Reuniones 1, Retroexcavadora CAT..."
+                    />
+                  </div>
+                </div>
+
                 {/* Estado */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Estado Inicial</label>
                   <div className="relative">
                     <Activity className="absolute left-3.5 top-3.5 text-slate-300" size={18} />
-                    <select 
+                    <select
                       name="estado"
                       value={formData.estado}
                       onChange={handleInputChange}
@@ -258,14 +282,14 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
 
                 {/* Buffer */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Buffer (Minutos)</label>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Buffer limpieza (min)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-slate-300 font-bold text-sm">⏱</span>
-                    <input 
-                      name="tiempo_buffer_minutos"
+                    <input
+                      name="buffer_limpieza_minutos"
                       type="number"
                       min="0"
-                      value={formData.tiempo_buffer_minutos}
+                      value={formData.buffer_limpieza_minutos}
                       onChange={handleInputChange}
                       className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-700 text-sm"
                       placeholder="15"
@@ -273,12 +297,12 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                   </div>
                 </div>
 
-                {/* Precio Base */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Precio Base ($)</label>
+                {/* Precio base */}
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Precio Base (CLP)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-slate-300 font-bold text-sm">$</span>
-                    <input 
+                    <input
                       name="precio_base"
                       type="number"
                       min="0"
@@ -291,34 +315,23 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                 </div>
               </div>
 
-              {/* FOOTER Y BOTÓN */}
               <div className="pt-4">
-                <button 
+                <button
                   type="button"
-                  onClick={async () => {
-                    if(!formData.nombre) {
-                       setError("El nombre del activo es obligatorio.");
-                       toast.error("El nombre del activo es obligatorio.");
-                       return;
-                    }
-                    await onGuardar({
-                      ...formData,
-                      precio_base: formData.precio_base ? Number(formData.precio_base) : 0,
-                      tiempo_buffer_minutos: formData.tiempo_buffer_minutos ? Number(formData.tiempo_buffer_minutos) : 0,
-                    });
-                  }}
+                  onClick={handleGuardar}
                   className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-all shadow-md flex items-center justify-center gap-2 group"
                 >
                   <Save size={18} className="group-hover:scale-110 transition-transform" />
                   Guardar Activo en Inventario
                 </button>
                 <p className="text-center text-[10px] text-slate-400 mt-4 uppercase tracking-widest font-bold">
-                  VERIFICA LOS DATOS EXTRAÍDOS ANTES DE GUARDAR.
+                  Verifica los datos extraídos antes de guardar.
                 </p>
               </div>
-            </form>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );
