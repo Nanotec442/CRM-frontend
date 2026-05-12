@@ -45,6 +45,12 @@ export const iaService = {
     });
     return res.data;
   },
+
+  async entrenarUrl(payload) {
+  const res = await api.post("/entrenar/url", payload);
+  return res.data;
+},
+
 };
 
 export default iaService;

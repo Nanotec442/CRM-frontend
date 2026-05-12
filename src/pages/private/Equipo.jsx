@@ -38,7 +38,7 @@ function Equipo() {
 
   // Carga roles cuando abre el formulario
   useEffect(() => {
-    if (vistaActual === "nuevo") obtenerRoles();
+    obtenerRoles();
   }, [vistaActual]);
 
   const obtenerEquipo = async () => {
@@ -350,7 +350,9 @@ function Equipo() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
-                        {miembro.is_superadmin ? "Propietario" : "Empleado"}
+                        {miembro.is_superadmin 
+                        ? "Propietario" 
+                        : roles.find((r) => r.id === miembro.role_id)?.nombre ?? "Sin rol"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">

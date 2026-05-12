@@ -41,7 +41,13 @@ export const authService = {
     const response = await api.get("/auth/ruta-secreta");
     return response.data;
   },
+
+  async actualizarPerfil(payload) {
+  const response = await api.patch("/auth/perfil", payload);
+  return response.data;
+  },
 };
+
 
 export const login = authService.login;
 export const register = authService.register;

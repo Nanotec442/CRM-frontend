@@ -59,7 +59,7 @@ const empresasService = {
     // GET /empresas/ → filtra automáticamente por tenant del token
     // OJO: mismo endpoint que listarTodasEmpresas pero el backend
     // distingue por el tipo de usuario en el token (superadmin vs tenant)
-    return api.get("/empresas/").then((r) => r.data);
+    return api.get("/empresas/mi-empresa/usuarios").then((r) => r.data);
   },
 
   crearSubusuario(payload) {

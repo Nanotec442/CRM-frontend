@@ -35,6 +35,15 @@ function ClienteDetalle() {
     }
   })();
 
+  const puedeAdministrar = (() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return false;
+      const payload = jwtDecode(token);
+      return payload.permisos?.administrar_empresa === true || payload.is_superadmin === true;
+    } catch { return false; }
+  })();
+
   const cargarCliente = async () => {
     try {
       setLoading(true);
@@ -77,14 +86,22 @@ function ClienteDetalle() {
   };
 
   const handleArchivar = async () => {
-    if (!window.confirm(`¿Archivar a ${cliente?.nombre_completo}? Dejará de aparecer en la lista activa.`)) return;
+    const estaInactivo = cliente?.estado?.toLowerCase() === "inactivo";
+    const accion = estaInactivo ? "reactivar" : "archivar";
+    const nuevoEstado = estaInactivo ? "Activo" : "Inactivo";
+
+    if (!window.confirm(
+      `¿${accion === "archivar" ? "Archivar" : "Reactivar"} a ${cliente?.nombre_completo}?`
+    )) return;
+
     setArchivando(true);
     try {
-      await clientesService.eliminar(id);
-      toast.success("Cliente archivado correctamente.");
-      navigate("/panel/clientes");
+      await clientesService.modificar(id, { estado: nuevoEstado });
+      setCliente((prev) => ({ ...prev, estado: nuevoEstado }));
+      toast.success(`Cliente ${nuevoEstado === "Activo" ? "reactivado" : "archivado"} correctamente.`);
     } catch (err) {
-      toast.error(err.response?.data?.detail || "No se pudo archivar el cliente.");
+      toast.error(err.response?.data?.detail || `No se pudo ${accion} el cliente.`);
+    } finally {
       setArchivando(false);
     }
   };
@@ -162,18 +179,23 @@ function ClienteDetalle() {
             {editando ? "Cancelar" : "Editar"}
           </button>
 
-          {esSuperAdmin && (
+          {puedeAdministrar && (
             <button
               onClick={handleArchivar}
               disabled={archivando}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors disabled:opacity-70"
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border transition-colors disabled:opacity-70 ${cliente?.estado?.toLowerCase() === "inactivo"
+                  ? "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                  : "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100"
+                }`}
             >
               {archivando ? (
                 <Loader2 size={15} className="animate-spin" />
+              ) : cliente?.estado?.toLowerCase() === "inactivo" ? (
+                <CheckCircle size={15} />
               ) : (
                 <Archive size={15} />
               )}
-              Archivar
+              {cliente?.estado?.toLowerCase() === "inactivo" ? "Reactivar" : "Archivar"}
             </button>
           )}
         </div>
@@ -216,13 +238,12 @@ function ClienteDetalle() {
                 {/* Estado */}
                 <div className="pt-2 border-t border-slate-100">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Estado</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${
-                    cliente?.estado?.toLowerCase() === "activo"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : cliente?.estado?.toLowerCase() === "inactivo"
+                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${cliente?.estado?.toLowerCase() === "activo"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : cliente?.estado?.toLowerCase() === "inactivo"
                       ? "bg-slate-100 text-slate-600 border-slate-200"
                       : "bg-indigo-50 text-indigo-700 border-indigo-200"
-                  }`}>
+                    }`}>
                     {cliente?.estado ?? "Nuevo"}
                   </span>
                 </div>
@@ -268,11 +289,10 @@ function ClienteDetalle() {
                           ${Number(tarjeta.valor_estimado).toLocaleString("es-CL")}
                         </span>
                       )}
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
-                        tarjeta.activa
-                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                          : "bg-slate-100 text-slate-500 border-slate-200"
-                      }`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${tarjeta.activa
+                        ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                        : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}>
                         {tarjeta.activa ? "Activa" : "Archivada"}
                       </span>
                     </div>
@@ -297,51 +317,50 @@ function ClienteDetalle() {
           </div>
 
         </div>
-          {/* Documentos del cliente */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-              <FileText size={16} className="text-indigo-600" />
-              <h2 className="text-sm font-bold text-slate-700">
-                Documentos ({documentos.length})
-              </h2>
-            </div>
-            {loadingDocs ? (
-              <div className="py-8 text-center">
-                <Loader2 size={20} className="animate-spin mx-auto text-slate-400" />
-              </div>
-            ) : documentos.length === 0 ? (
-              <div className="px-6 py-8 text-center">
-                <FileText size={28} className="mx-auto text-slate-200 mb-2" />
-                <p className="text-sm text-slate-400">Sin documentos registrados.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-50">
-                {documentos.map((doc) => (
-                  <div key={doc.id} className="px-6 py-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{doc.tipo_documento}</p>
-                      <p className="text-xs text-slate-400">
-                        {doc.fecha_generacion
-                          ? new Date(doc.fecha_generacion).toLocaleDateString("es-CL")
-                          : "—"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                        doc.estado_firma === "Firmado"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : doc.estado_firma === "Anulado"
-                          ? "bg-red-50 text-red-700 border-red-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}>
-                        {doc.estado_firma ?? "Pendiente"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Documentos del cliente */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <FileText size={16} className="text-indigo-600" />
+            <h2 className="text-sm font-bold text-slate-700">
+              Documentos ({documentos.length})
+            </h2>
           </div>
+          {loadingDocs ? (
+            <div className="py-8 text-center">
+              <Loader2 size={20} className="animate-spin mx-auto text-slate-400" />
+            </div>
+          ) : documentos.length === 0 ? (
+            <div className="px-6 py-8 text-center">
+              <FileText size={28} className="mx-auto text-slate-200 mb-2" />
+              <p className="text-sm text-slate-400">Sin documentos registrados.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {documentos.map((doc) => (
+                <div key={doc.id} className="px-6 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{doc.tipo_documento}</p>
+                    <p className="text-xs text-slate-400">
+                      {doc.fecha_generacion
+                        ? new Date(doc.fecha_generacion).toLocaleDateString("es-CL")
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${doc.estado_firma === "Firmado"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : doc.estado_firma === "Anulado"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                      {doc.estado_firma ?? "Pendiente"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

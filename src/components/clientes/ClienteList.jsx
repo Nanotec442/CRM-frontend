@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit2, KanbanSquare, ToggleLeft, ToggleRight, ExternalLink } from "lucide-react";
+import { Edit2, KanbanSquare, ToggleLeft, ToggleRight, ExternalLink, Trash2 } from "lucide-react";
 
 function ClienteList({
   clientes,
@@ -11,8 +11,10 @@ function ClienteList({
   onNuevo,
   onMoverAPipeline,
   onToggleEstado,
+  onEliminar, // null si el usuario no es superadmin — controla visibilidad del botón eliminar
 }) {
   const navigate = useNavigate();
+
   const clientesUnicos = useMemo(() => {
     if (!Array.isArray(clientes)) return [];
     const seen = new Set();
@@ -65,11 +67,21 @@ function ClienteList({
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Empresa</th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Cliente
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Contacto
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Empresa
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Estado
+                </th>
+                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -84,11 +96,16 @@ function ClienteList({
                   .toUpperCase();
 
                 const estadoActual = (c.estado ?? "Activo").toLowerCase();
-                const estaActivo = estadoActual === "activo" || estadoActual === "activa" || estadoActual === "nuevo";
+                const esInactivo = estadoActual === "inactivo";
+                const estaActivo = !esInactivo && estadoActual !== "archivado";
 
                 return (
-                  <tr key={String(id)} className="hover:bg-slate-50/80 transition-colors group">
-
+                  <tr
+                    key={String(id)}
+                    className={`hover:bg-slate-50/80 transition-colors group ${
+                      esInactivo ? "opacity-60" : ""
+                    }`}
+                  >
                     {/* Nombre */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -147,14 +164,16 @@ function ClienteList({
                           {estaActivo ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                         </button>
 
-                        {/* Pipeline */}
-                        <button
-                          onClick={() => onMoverAPipeline(c.id ?? c.cliente_id)}
-                          title="Crear Oportunidad en Pipeline"
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <KanbanSquare size={18} />
-                        </button>
+                        {/* Mover al pipeline — solo si no está inactivo */}
+                        {!esInactivo && (
+                          <button
+                            onClick={() => onMoverAPipeline(c.id ?? c.cliente_id)}
+                            title="Crear Oportunidad en Pipeline"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <KanbanSquare size={18} />
+                          </button>
+                        )}
 
                         <div className="w-px h-4 bg-slate-200 mx-1" />
 
@@ -175,6 +194,17 @@ function ClienteList({
                         >
                           <Edit2 size={18} />
                         </button>
+
+                        {/* Eliminar — solo visible si onEliminar no es null (superadmin) */}
+                        {onEliminar && (
+                          <button
+                            onClick={() => onEliminar(c.id ?? c.cliente_id, c.nombre)}
+                            title="Eliminar permanentemente"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -195,7 +225,7 @@ function ClienteList({
   );
 }
 
-// Estados válidos del cliente — cualquier otro valor se trata como "Nuevo"
+// ── EstadoBadge ───────────────────────────────────────────────────────────────
 const ESTADOS_VALIDOS = ["activo", "activa", "inactivo", "archivado", "prospecto", "nuevo"];
 
 function EstadoBadge({ estado }) {
@@ -209,8 +239,6 @@ function EstadoBadge({ estado }) {
   };
 
   const key = (estado ?? "nuevo").toLowerCase();
-
-  // Si el estado no es un valor válido (ej: nombre de columna del pipeline), mostrar "Nuevo"
   const esValido = ESTADOS_VALIDOS.includes(key);
   const { label, cls } = esValido
     ? map[key]
@@ -223,6 +251,7 @@ function EstadoBadge({ estado }) {
   );
 }
 
+// ── SkeletonTable ─────────────────────────────────────────────────────────────
 function SkeletonTable() {
   return (
     <div className="divide-y divide-slate-50">
@@ -241,6 +270,7 @@ function SkeletonTable() {
   );
 }
 
+// ── EmptyState ────────────────────────────────────────────────────────────────
 function EmptyState({ busqueda, onNuevo }) {
   return (
     <div className="py-20 text-center flex flex-col items-center justify-center">
@@ -253,7 +283,9 @@ function EmptyState({ busqueda, onNuevo }) {
       ) : (
         <>
           <p className="text-base font-semibold text-slate-800">Aún no hay clientes</p>
-          <p className="text-sm text-slate-500 mt-1 mb-5">Agrega el primero para comenzar a gestionar tu cartera.</p>
+          <p className="text-sm text-slate-500 mt-1 mb-5">
+            Agrega el primero para comenzar a gestionar tu cartera.
+          </p>
           <button
             onClick={onNuevo}
             className="text-sm font-medium bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"

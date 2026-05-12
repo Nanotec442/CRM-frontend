@@ -5,25 +5,15 @@ import { Mail, Lock, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import { login } from "../../services/authService";
 
-/**
- * @component Login
- * @description Vista principal de autenticación. Gestiona el acceso al CRM,
- * validación de credenciales y extracción segura del Tenant ID.
- */
 function Login() {
   const navigate = useNavigate();
-
-  // --- ESTADOS ---
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- MANEJADORES ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Limpiamos el mensaje de error apenas el usuario empieza a escribir de nuevo
     if (error) setError("");
   };
 
@@ -33,30 +23,44 @@ function Login() {
     setIsLoading(true);
 
     try {
-      // 1. Petición de autenticación al backend
       const data = await login(formData.email, formData.password);
 
-      // 2. Guardar token de acceso principal
+      // Guardar token
       localStorage.setItem("token", data.access_token);
 
-      // 3. Extracción segura del tenant_id (Prioriza respuesta directa, fallback a JWT)
-      if (data.tenant_id) {
-        localStorage.setItem("tenant_id", data.tenant_id);
+      // Decodificar JWT para obtener datos del usuario
+      const payload = jwtDecode(data.access_token);
+
+      // Guardar tenant_id si existe (no es obligatorio para superadmin)
+      const tenantId = data.tenant_id ?? payload.tenant_id ?? null;
+      if (tenantId) {
+        localStorage.setItem("tenant_id", tenantId);
       } else {
-        const payload = jwtDecode(data.access_token);
-        if (payload.tenant_id) {
-          localStorage.setItem("tenant_id", payload.tenant_id);
-        } else {
-          throw new Error("No se pudo identificar la organización (tenant_id).");
-        }
+        localStorage.removeItem("tenant_id");
       }
 
-      // 4. Confirmar autenticación y redirigir al panel
       localStorage.setItem("isAuth", "true");
-      navigate("/panel");
+
+      // Superadmin sin tenant → panel igualmente
+      // Usuario normal sin tenant → error claro
+      if (!tenantId && !payload.is_superadmin) {
+        setError("Tu cuenta no tiene una organización asignada. Contacta al administrador.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("isAuth");
+        return;
+      }
+
+      // Superadmin → panel de administración global
+      if (payload.is_superadmin) {
+        navigate("/superadmin");
+        return;
+      }
+
+      // Si había una reserva pendiente antes del login, redirigir a reservas
+      const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+      navigate(returnUrl || "/panel");
 
     } catch (err) {
-      // Manejo de errores amigable para el usuario
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError("Correo o contraseña incorrectos. Verifica tus datos.");
       } else {
@@ -67,15 +71,13 @@ function Login() {
     }
   };
 
-  // --- RENDERIZADO DE LA UI ---
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-105 rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
-          
-          {/* Cabecera del Formulario */}
+
           <div className="mb-8 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 shadow-inner">
               <ShieldCheck size={28} strokeWidth={1.5} />
@@ -87,8 +89,7 @@ function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            
-            {/* Input: Correo Electrónico */}
+
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 Correo Electrónico
@@ -108,7 +109,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Input: Contraseña */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
@@ -136,14 +136,12 @@ function Login() {
               </div>
             </div>
 
-            {/* Alerta de Error */}
             {error && (
               <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-600 font-medium border border-rose-100 animate-in slide-in-from-top-2">
                 {error}
               </div>
             )}
 
-            {/* Botón de Submit */}
             <button
               type="submit"
               disabled={isLoading || !formData.email || !formData.password}
@@ -162,8 +160,6 @@ function Login() {
               )}
             </button>
           </form>
-
-
 
         </div>
       </main>

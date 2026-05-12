@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useConfig } from "../../hooks/useConfig";
 import { jwtDecode } from "jwt-decode";
 import { Loader2, Sparkles, Save } from "lucide-react";
+import { toast } from "react-toastify";
 
 import ConfigSidebar from "../../components/configuracion/ConfigSidebar";
 import PerfilConfig from "../../components/configuracion/PerfilConfig";
@@ -11,6 +12,7 @@ import EntrenarIA from "../../components/configuracion/EntrenarIA";
 import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
 import RolesConfig from "../../components/configuracion/RolesConfig";
 import ReservasOnlineConfig from "../../components/configuracion/ReservasOnlineConfig";
+import authService from "../../services/authService";
 
 // Importamos el servicio de empresas
 import empresasService from "../../services/empresasService";
@@ -28,60 +30,47 @@ const Configuracion = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // 1. HIDRATACIÓN DUAL: JWT (Usuario) + API (Empresa)
-  useEffect(() => {
-    const inicializarDatos = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+useEffect(() => {
+  const inicializarDatos = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-        // Decodificamos el usuario
-        const payload = jwtDecode(token);
-        
-        // Buscamos el ID de la empresa (puede venir en el JWT o en el localStorage)
-        const tenantId = payload.tenant_id || localStorage.getItem("tenant_id");
+      const payload = jwtDecode(token);
+      const tenantId = payload.tenant_id || localStorage.getItem("tenant_id");
 
-        // Actualizamos los datos del usuario primero (Carga instantánea)
+      // JWT siempre tiene prioridad — nombre viene del token
+      setForm((prev) => ({
+        ...prev,
+        nombre_completo: payload.nombre
+          ? `${payload.nombre} ${payload.apellido ?? ""}`.trim()
+          : "",
+        email: payload.sub ?? "",
+        is_superadmin: payload.is_superadmin ?? false,
+        telefono: prev?.telefono ?? "",
+      }));
+
+      if (tenantId) {
+        const dataEmpresa = await empresasService.verMiEmpresa(tenantId);
         setForm((prev) => ({
           ...prev,
-          nombre_completo: prev?.nombre_completo || `${payload.nombre || ''} ${payload.apellido || ''}`.trim() || payload.name || "",
-          email: payload.email || payload.sub || prev?.email || "",
-          is_superadmin: payload.is_superadmin || false,
-          telefono: payload.telefono || prev?.telefono || "",
+          nombre_empresa: dataEmpresa.nombre ?? "",
+          rut_empresa: dataEmpresa.rut_empresa ?? "",
+          tipo_empresa: dataEmpresa.tipo_empresa ?? "",
+          direccion: dataEmpresa.direccion ?? "",
+          sub_dominio: dataEmpresa.sub_dominio ?? "",
         }));
-
-        // Si tenemos la empresa, vamos al backend a buscar sus datos reales (Carga asíncrona)
-        if (tenantId) {
-          const dataEmpresa = await empresasService.verMiEmpresa(tenantId);
-          setForm((prev) => ({
-            ...prev,
-            nombre_empresa: dataEmpresa.nombre_empresa || "",
-            rut_empresa: dataEmpresa.rut_empresa || "",
-            tipo_empresa: dataEmpresa.tipo_empresa || "",
-            direccion: dataEmpresa.direccion || "",
-            sub_dominio: dataEmpresa.sub_dominio || "",
-          }));
-        }
-
-      } catch (error) {
-        console.warn("Error al inicializar la configuración:", error);
       }
-    };
-
-    inicializarDatos();
-  }, []);
-
-  // 2. SINCRONIZACIÓN CON ESTADO LOCAL
-  useEffect(() => {
-    if (config) {
-      setForm((prev) => ({ 
-        ...prev, 
-        ...config,
-        nombre_completo: config.nombre_completo || `${config.nombre || ''} ${config.apellido || ''}`.trim() || prev.nombre_completo
-      }));
+    } catch (error) {
+      console.warn("Error al inicializar la configuración:", error);
     }
-  }, [config]);
+  };
 
-  // 3. MANEJADOR UNIVERSAL DE INPUTS
+  inicializarDatos();
+}, []);
+
+
+  // 2. MANEJADOR UNIVERSAL DE INPUTS
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -89,49 +78,51 @@ const Configuracion = () => {
     });
   };
 
-  // 4. PREPARACIÓN Y RUTEO ANTES DE GUARDAR
-  const handleGuardar = async () => {
-    setIsProcessing(true);
-    
-    // Copia profunda para trabajar los datos
-    const payload = { ...form };
+  // 3. PREPARACIÓN Y RUTEO ANTES DE GUARDAR
+const handleGuardar = async () => {
+  setIsProcessing(true);
+  const payload = { ...form };
 
-    try {
-      if (active === "perfil") {
-        // Formateo del nombre para el perfil
-        if (payload.nombre_completo) {
-          const partes = payload.nombre_completo.trim().split(" ");
-          payload.nombre = partes[0] || "";
-          payload.apellido = partes.slice(1).join(" ") || " ";
-          delete payload.nombre_completo; 
-        }
-        
-        guardar(payload);
+  try {
+    if (active === "perfil") {
+      const partes = (payload.nombre_completo ?? "").trim().split(" ");
+      const nombre = partes[0] || "";
+      const apellido = partes.slice(1).join(" ") || "";
 
-      } else if (active === "empresa") {
-        
-        const payloadEmpresa = {
-          nombre_empresa: payload.nombre_empresa,
-          rut_empresa: payload.rut_empresa,
-          tipo_empresa: payload.tipo_empresa,
-          direccion: payload.direccion,
-        };
-        
-        await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
-        guardar(payload);
-
-      } else {
-        guardar(payload);
+      const respuesta = await authService.actualizarPerfil({
+        nombre,
+        apellido,
+        telefono: payload.telefono || "",
+      });
+      if (respuesta.access_token) {
+        localStorage.setItem("token", respuesta.access_token);
       }
 
-    } catch (error) {
-      console.error("Error al guardar la configuración:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+      toast.success("Perfil actualizado correctamente.");
 
-  // 5. FLUJO DE INTELIGENCIA ARTIFICIAL
+    } else if (active === "empresa") {
+      const payloadEmpresa = {
+        nombre_empresa: payload.nombre_empresa,
+        rut_empresa: payload.rut_empresa,
+        tipo_empresa: payload.tipo_empresa,
+        direccion: payload.direccion,
+      };
+      await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
+      guardar(payload);
+
+    } else {
+      guardar(payload);
+    }
+
+  } catch (error) {
+    toast.error("Error al guardar los cambios.");
+    console.error(error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+  // 4. FLUJO DE INTELIGENCIA ARTIFICIAL
   const handleAIFill = (data) => {
     setIsProcessing(true);
 

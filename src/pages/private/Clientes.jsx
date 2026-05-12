@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { jwtDecode } from "jwt-decode";
 import ClienteForm from "../../components/clientes/ClienteForm";
 import ClienteList from "./../../components/clientes/ClienteList";
 import PipelineClientes from "../../components/clientes/PipelineClientes";
 import NuevoClienteVista from "../../components/clientes/NuevoClienteVista";
 import { clientesService } from "../../services/clientesService";
 import { tarjetasService } from "../../services/tarjetasService";
-
 import ModalFirmaLegal from "../../components/firmas/ModalFirmaLegal";
 import FirmaFisica from "../../components/firmas/FirmaFisica";
 import { toast } from "react-toastify";
@@ -18,10 +18,24 @@ function Clientes() {
   const [error, setError] = useState(null);
   const [formVisible, setFormVisible] = useState(false);
   const [vista, setVista] = useState("pipeline");
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   const [firmaLegalState, setFirmaLegalState] = useState({ isOpen: false, clienteId: null });
   const [firmaFisicaState, setFirmaFisicaState] = useState({ isOpen: false, clienteId: null });
 
+  // ── Permisos desde el JWT ─────────────────────────────────────────────────
+  const esSuperAdmin = (() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return false;
+      const payload = jwtDecode(token);
+      return payload.is_superadmin === true;
+    } catch {
+      return false;
+    }
+  })();
+
+  // ── Cargar clientes ───────────────────────────────────────────────────────
   const cargarClientes = useCallback(async () => {
     try {
       setLoading(true);
@@ -57,7 +71,6 @@ function Clientes() {
       if (clienteEditando) {
         const idActual = clienteEditando.id ?? clienteEditando.cliente_id;
 
-        // Normalizar payload — soporta tanto "nombre" como "nombre_completo"
         const payload = {
           nombre_completo: formData.nombre ?? formData.nombre_completo,
           email: formData.email,
@@ -84,10 +97,10 @@ function Clientes() {
               : c
           )
         );
+
         setClienteEditando(null);
         toast.success("Cliente actualizado correctamente.");
       } else {
-        // Normalizar payload — soporta tanto ClienteForm como NuevoClienteVista
         const payload = {
           nombre: formData.nombre ?? formData.nombre_completo,
           email: formData.email,
@@ -109,6 +122,7 @@ function Clientes() {
           notas: "",
           estado: nuevo.estado ?? "Nuevo",
         };
+
         setClientes((prev) => [mapped, ...prev]);
 
         // Crear tarjeta en el pipeline automáticamente
@@ -139,7 +153,26 @@ function Clientes() {
 
   // ── Mover al pipeline manualmente ────────────────────────────────────────
   const handleMoverAPipeline = async (clienteId) => {
+    const cliente = clientes.find((c) => (c.id ?? c.cliente_id) === clienteId);
+    const estadoActual = (cliente?.estado ?? "").toLowerCase();
+
+    if (estadoActual === "inactivo") {
+      toast.warning("No puedes agregar un cliente inactivo al pipeline. Actívalo primero.");
+      return;
+    }
+
     try {
+      const tablero = await tarjetasService.getTablero();
+      const yaEnPipeline = tablero.some(
+        (t) => String(t.cliente_id) === String(clienteId) && t.activa !== false
+      );
+
+      if (yaEnPipeline) {
+        toast.warning("Este cliente ya tiene una oportunidad activa en el pipeline.");
+        setVista("pipeline");
+        return;
+      }
+
       const columnas = await tarjetasService.getColumnas();
       const columnasOrdenadas = columnas.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
       const primeraColumnaId = columnasOrdenadas[0]?.id;
@@ -162,8 +195,6 @@ function Clientes() {
   };
 
   // ── Activar / Desactivar cliente ─────────────────────────────────────────
-  // estaActivo se calcula en ClienteList solo con estados válidos (Activo/Nuevo)
-  // Ignoramos estados del pipeline que puedan haberse guardado en el campo estado
   const handleToggleEstado = async (clienteId, estaActivo) => {
     const nuevoEstado = estaActivo ? "Inactivo" : "Activo";
     try {
@@ -179,6 +210,24 @@ function Clientes() {
     }
   };
 
+  // ── Eliminar permanentemente — solo superadmin ────────────────────────────
+  const handleEliminar = async (clienteId, nombre) => {
+    if (
+      !window.confirm(
+        `¿Eliminar permanentemente a "${nombre}"?\n\nEsta acción no se puede deshacer y eliminará todos sus datos asociados.`
+      )
+    ) return;
+
+    try {
+      await clientesService.eliminar(clienteId);
+      setClientes((prev) => prev.filter((c) => (c.id ?? c.cliente_id) !== clienteId));
+      toast.success("Cliente eliminado permanentemente.");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "No se pudo eliminar el cliente.");
+    }
+  };
+
+  // ── Editar ────────────────────────────────────────────────────────────────
   const handleEditar = (cliente) => {
     setClienteEditando(cliente);
     setFormVisible(true);
@@ -190,16 +239,22 @@ function Clientes() {
     setFormVisible(false);
   };
 
-  const handleGuardarFirmaFisica = async (imagenBase64) => {
+  const handleGuardarFirmaFisica = async () => {
     try {
       toast.success("¡Firma guardada correctamente!");
       setFirmaFisicaState({ isOpen: false, clienteId: null });
-    } catch (err) {
+    } catch {
       toast.error("Hubo un error al guardar la firma.");
     }
   };
 
+  // ── Filtros ───────────────────────────────────────────────────────────────
+  // Por defecto se ocultan los clientes inactivos
   const clientesFiltrados = clientes.filter((c) => {
+    const esInactivo = (c.estado ?? "").toLowerCase() === "inactivo";
+
+    if (esInactivo && !mostrarInactivos) return false;
+
     const q = busqueda.toLowerCase();
     return (
       (c.nombre ?? "").toLowerCase().includes(q) ||
@@ -208,6 +263,15 @@ function Clientes() {
     );
   });
 
+  const totalActivos = clientes.filter(
+    (c) => (c.estado ?? "").toLowerCase() !== "inactivo"
+  ).length;
+
+  const totalInactivos = clientes.filter(
+    (c) => (c.estado ?? "").toLowerCase() === "inactivo"
+  ).length;
+
+  // ── Loading inicial ───────────────────────────────────────────────────────
   if (loading && clientes.length === 0) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -225,7 +289,21 @@ function Clientes() {
           <h1 className="text-3xl font-bold text-slate-900">Clientes</h1>
           <p className="mt-2 text-slate-600">
             Gestiona tu cartera de clientes y haz seguimiento de sus estados.
-            Tienes <span className="font-semibold">{clientes.length}</span> registros activos.
+            Tienes <span className="font-semibold">{totalActivos}</span> registros activos.
+            {totalInactivos > 0 && (
+              <button
+                onClick={() => setMostrarInactivos(!mostrarInactivos)}
+                className={`ml-2 text-xs font-semibold underline transition-colors ${
+                  mostrarInactivos
+                    ? "text-amber-600 hover:text-amber-700"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                {mostrarInactivos
+                  ? `Ocultar inactivos (${totalInactivos})`
+                  : `Ver inactivos (${totalInactivos})`}
+              </button>
+            )}
           </p>
         </div>
 
@@ -234,7 +312,9 @@ function Clientes() {
             <button
               onClick={() => { setVista("pipeline"); setFormVisible(false); }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                vista === "pipeline" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                vista === "pipeline"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Pipeline Visual
@@ -242,7 +322,9 @@ function Clientes() {
             <button
               onClick={() => { setVista("lista"); setFormVisible(false); }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                vista === "lista" && !formVisible ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                vista === "lista" && !formVisible
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Lista Detallada
@@ -262,6 +344,7 @@ function Clientes() {
         </div>
       </section>
 
+      {/* Error */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
           <p>⚠ {error}</p>
@@ -310,6 +393,7 @@ function Clientes() {
                 onNuevo={() => { setClienteEditando(null); setVista("nuevo"); }}
                 onMoverAPipeline={handleMoverAPipeline}
                 onToggleEstado={handleToggleEstado}
+                onEliminar={esSuperAdmin ? handleEliminar : null}
               />
             </div>
           </div>

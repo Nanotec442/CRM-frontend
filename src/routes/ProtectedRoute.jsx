@@ -1,58 +1,45 @@
-import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { authService } from "../services/authService"; 
+import { jwtDecode } from "jwt-decode";
 
-function ProtectedRoute({ children }) {
-  const [isVerifying, setIsVerifying] = useState(true);
-  const [isValid, setIsValid] = useState(false);
+/**
+ * Protege rutas privadas validando el JWT localmente.
+ * requireSuperAdmin=true → solo permite superadmin
+ * Sin prop → permite cualquier usuario autenticado
+ */
+function ProtectedRoute({ children, requireSuperAdmin = false }) {
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const verifySession = async () => {
-      const token = localStorage.getItem("token");
-
-      // 1. Si no siquiera hay token físico, le negamos el acceso de inmediato
-      if (!token) {
-        setIsValid(false);
-        setIsVerifying(false);
-        return;
-      }
-
-      // 2. Si hay token, le preguntamos a FastAPI si es real y si no ha expirado
-      try {
-        const userData = await authService.getRutaSecreta();
-        
-        // Si responde bien, el token es válido. 
-        setIsValid(true);
-      } catch (error) {
-        // 3. Si FastAPI responde con error (ej. token vencido), limpiamos la basura y lo echamos
-        console.error("Sesión inválida o expirada");
-        localStorage.removeItem("token");
-        localStorage.removeItem("tenant_id"); // Limpiamos también el tenant por seguridad
-        setIsValid(false);
-      } finally {
-        // Pase lo que pase, terminamos de verificar
-        setIsVerifying(false);
-      }
-    };
-
-    verifySession();
-  }, []); 
-
-  // Mientras esperamos la respuesta del backend, mostramos una pantalla de carga
-  if (isVerifying) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <p className="text-indigo-600 font-semibold animate-pulse">Verificando sesión segura...</p>
-      </div>
-    );
-  }
-
-  // Si terminó de verificar y es falso, lo mandamos al Login
-  if (!isValid) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // Si todo es válido, ¡lo dejamos pasar a la vista solicitada!
+  try {
+    const payload = jwtDecode(token);
+    const ahora = Math.floor(Date.now() / 1000);
+
+    // Token expirado
+    if (payload.exp && payload.exp < ahora) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("tenant_id");
+      return <Navigate to="/login" replace />;
+    }
+
+    // Ruta solo para superadmin
+    if (requireSuperAdmin && !payload.is_superadmin) {
+      return <Navigate to="/panel" replace />;
+    }
+
+    // Superadmin intentando entrar al panel CRM normal → redirigir a superadmin
+    if (!requireSuperAdmin && payload.is_superadmin) {
+      return <Navigate to="/superadmin" replace />;
+    }
+
+  } catch {
+    localStorage.removeItem("token");
+    localStorage.removeItem("tenant_id");
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 }
 

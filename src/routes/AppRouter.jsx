@@ -12,6 +12,12 @@ import ResetPassword from "../pages/public/ResetPassword";
 import RetornoWebpay from "../pages/public/RetornoWebpay";
 import LandingReservas from "../pages/public/LandingReservas";
 
+// Panel Superadmin
+import SuperAdminLayout from "../pages/superadmin/SuperAdminLayout";
+import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard";
+import EmpresasList from "../pages/superadmin/EmpresasList";
+import EmpresaDetalle from "../pages/superadmin/EmpresaDetalle";
+
 // Páginas privadas
 import Dashboard from "../pages/private/Dashboard";
 import Clientes from "../pages/private/Clientes";
@@ -41,6 +47,21 @@ function AppRouter() {
         </Route>
 
         {/* ── Rutas Privadas ── */}
+        {/* ── Panel Superadmin ── */}
+        <Route
+          path="/superadmin"
+          element={
+            <ProtectedRoute requireSuperAdmin>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<SuperAdminDashboard />} />
+          <Route path="empresas" element={<EmpresasList />} />
+          <Route path="empresas/:tenantId" element={<EmpresaDetalle />} />
+        </Route>
+
+        {/* ── Panel CRM ── */}
         <Route
           path="/panel"
           element={

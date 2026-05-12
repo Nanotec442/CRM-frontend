@@ -1,15 +1,20 @@
 import React, { useState, useRef } from "react";
-import { BrainCircuit, UploadCloud, FileText, Loader2, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
+import { BrainCircuit, UploadCloud, Loader2, CheckCircle, AlertCircle, Sparkles, Link as LinkIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import iaService from "../../services/iaService";
 
 export default function EntrenarIA() {
-  // --- ESTADOS ---
+  // --- ESTADOS ARCHIVOS ---
   const [dragActive, setDragActive] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [fileError, setFileError] = useState(null);
+  const [fileSuccessMsg, setFileSuccessMsg] = useState(null);
   const inputRef = useRef(null);
+
+  // --- ESTADOS URL ---
+  const [urlInput, setUrlInput] = useState("");
+  const [isProcessingUrl, setIsProcessingUrl] = useState(false);
+  const [urlFeedback, setUrlFeedback] = useState({ type: null, message: "" }); // type: 'error' | 'success'
 
   // --- MANEJO DE DRAG & DROP ---
   const handleDrag = (e) => {
@@ -24,59 +29,88 @@ export default function EntrenarIA() {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      entrenarModelo(e.dataTransfer.files[0]);
+      entrenarModeloArchivo(e.dataTransfer.files[0]);
     }
   };
 
   const handleChange = (e) => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
-      entrenarModelo(e.target.files[0]);
+      entrenarModeloArchivo(e.target.files[0]);
     }
   };
 
-  // --- LÓGICA DE API CON AXIOS ---
-  const entrenarModelo = async (file) => {
-    // Validación de tamaño (Ej: Máx 15MB para documentos)
+  // --- LÓGICA DE API (ARCHIVOS) ---
+  const entrenarModeloArchivo = async (file) => {
     const maxSize = 15 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError("El documento excede el límite de 15MB permitido.");
+      setFileError("El documento excede el límite de 15MB permitido.");
       toast.error("Archivo demasiado pesado.");
       return;
     }
 
-    setIsProcessing(true);
-    setError(null);
-    setSuccessMsg(null);
+    setIsProcessingFile(true);
+    setFileError(null);
+    setFileSuccessMsg(null);
 
-    // Preparación del payload (El backend espera 'archivo')
     const formData = new FormData();
     formData.append("archivo", file);
 
     try {
-      // Axios se encarga automáticamente de poner el Content-Type a multipart/form-data
       const response = await iaService.entrenarPdf(formData);
-
-      // Éxito en el entrenamiento
       const mensajeExito = response?.mensaje || "Documento procesado e indexado en la base de conocimiento.";
-      setSuccessMsg(mensajeExito);
-      toast.success("¡IA entrenada con éxito!");
-
+      setFileSuccessMsg(mensajeExito);
+      toast.success("¡IA entrenada con documento!");
     } catch (err) {
       console.error("Error entrenando IA:", err);
-      
       if (err.response) {
         const errMsg = err.response.data?.detail || "Error del servidor al procesar el documento.";
-        setError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+        setFileError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
         toast.error("Fallo al procesar el documento.");
       } else {
-        setError("Error de red. Verifica tu conexión a internet.");
+        setFileError("Error de red. Verifica tu conexión a internet.");
         toast.error("Error de conexión.");
       }
     } finally {
-      setIsProcessing(false);
-      // Reseteamos el input para poder subir otro archivo si se desea
+      setIsProcessingFile(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  // --- LÓGICA DE API (URL) ---
+  const entrenarModeloUrl = async (e) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+
+    // Validación básica de URL
+    try {
+      new URL(urlInput);
+    } catch (_) {
+      setUrlFeedback({ type: "error", message: "Por favor, ingresa una URL válida que empiece con http:// o https://" });
+      return;
+    }
+
+    setIsProcessingUrl(true);
+    setUrlFeedback({ type: null, message: "" });
+
+    try {
+      const response = await iaService.entrenarUrl({ url: urlInput });
+      const mensajeExito = response?.mensaje || "URL procesada e indexada en la base de conocimiento.";
+      setUrlFeedback({ type: "success", message: mensajeExito });
+      setUrlInput(""); // Limpiar el input
+      toast.success("¡IA entrenada desde URL!");
+    } catch (err) {
+      console.error("Error entrenando IA con URL:", err);
+      if (err.response) {
+        const errMsg = err.response.data?.detail || "Error del servidor al procesar la URL.";
+        setUrlFeedback({ type: "error", message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg) });
+        toast.error("Fallo al procesar la URL.");
+      } else {
+        setUrlFeedback({ type: "error", message: "Error de red. Verifica tu conexión a internet." });
+        toast.error("Error de conexión.");
+      }
+    } finally {
+      setIsProcessingUrl(false);
     }
   };
 
@@ -94,74 +128,140 @@ export default function EntrenarIA() {
             <Sparkles size={16} className="text-amber-400" />
           </h2>
           <p className="text-sm text-slate-500 font-medium mt-1 leading-relaxed max-w-2xl">
-            Sube documentos técnicos, manuales o políticas de tu empresa (PDF, Word, TXT). 
-            Esta información alimentará el motor RAG (Generación Aumentada por Recuperación) de PIVOT, 
-            entrenando al asistente para dar respuestas exactas basadas en el contexto real de tu negocio.
+            Sube documentos técnicos, manuales o políticas, o proporciona la URL de tu sitio web. 
+            Esta información alimentará el motor RAG de PIVOT, entrenando al asistente para dar 
+            respuestas exactas basadas en el contexto real de tu negocio.
           </p>
         </div>
       </div>
 
-      {/* --- ZONA DRAG & DROP --- */}
-      <div 
-        className={`relative group border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[260px]
-          ${dragActive ? 'border-indigo-500 bg-indigo-50/70 scale-[1.01]' : 'border-slate-200 bg-slate-50 hover:bg-slate-50/50 hover:border-indigo-300'}
-          ${isProcessing ? 'opacity-70 pointer-events-none blur-[1px]' : ''}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        {isProcessing ? (
-          <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-            <div className="relative">
-              <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" strokeWidth={1.5} />
-              <BrainCircuit className="w-5 h-5 text-indigo-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[130%] animate-pulse" />
-            </div>
-            <p className="text-slate-800 font-bold">Extrayendo texto y vectorizando...</p>
-            <p className="text-xs text-slate-500 mt-1">Esto puede tomar unos segundos dependiendo del tamaño del archivo.</p>
+      <div className="grid grid-cols-1 gap-10">
+        
+        {/* ================================================== */}
+        {/* SECCIÓN 1: SUBIDA DE ARCHIVOS                      */}
+        {/* ================================================== */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">1. Subir Documento</h3>
+          <div 
+            className={`relative group border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[220px]
+              ${dragActive ? 'border-indigo-500 bg-indigo-50/70 scale-[1.01]' : 'border-slate-200 bg-slate-50 hover:bg-slate-50/50 hover:border-indigo-300'}
+              ${isProcessingFile ? 'opacity-70 pointer-events-none blur-[1px]' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            {isProcessingFile ? (
+              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                <div className="relative">
+                  <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-3" strokeWidth={1.5} />
+                </div>
+                <p className="text-slate-800 font-bold text-sm">Extrayendo texto y vectorizando...</p>
+                <p className="text-xs text-slate-500 mt-1">Esto puede tomar unos segundos.</p>
+              </div>
+            ) : (
+              <>
+                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-3 group-hover:-translate-y-1 transition-transform">
+                  <UploadCloud size={28} className="text-indigo-500" strokeWidth={1.5} />
+                </div>
+                <p className="text-slate-700 font-medium mb-1 text-base">
+                  <span className="font-bold text-indigo-600 cursor-pointer hover:underline">Haz clic aquí</span> o arrastra tu documento
+                </p>
+                <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mt-2">
+                  SOPORTA: PDF, DOCX, XLSX, TXT (MÁX. 15MB)
+                </p>
+                
+                <input 
+                  ref={inputRef}
+                  type="file" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleChange}
+                  accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv"
+                  disabled={isProcessingFile}
+                />
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4 group-hover:-translate-y-1 transition-transform">
-              <UploadCloud size={32} className="text-indigo-500" strokeWidth={1.5} />
+
+          {/* Feedback Archivos */}
+          {fileError && (
+            <div className="mt-4 flex items-center gap-3 text-rose-600 bg-rose-50 p-3 rounded-xl text-sm font-medium border border-rose-100 animate-in slide-in-from-top-2">
+              <AlertCircle size={18} className="shrink-0" /> <p>{fileError}</p>
             </div>
-            <p className="text-slate-700 font-medium mb-1 text-lg">
-              <span className="font-bold text-indigo-600 cursor-pointer hover:underline">Haz clic aquí</span> o arrastra tu documento
-            </p>
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mt-2">
-              SOPORTA: PDF, DOCX, XLSX, TXT (MÁX. 15MB)
-            </p>
-            
-            <input 
-              ref={inputRef}
-              type="file" 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={handleChange}
-              accept=".pdf,.docx,.doc,.txt,.xlsx,.xls,.csv"
-              disabled={isProcessing}
-            />
-          </>
-        )}
+          )}
+          {fileSuccessMsg && !fileError && (
+            <div className="mt-4 flex items-center gap-3 text-emerald-700 bg-emerald-50 p-3 rounded-xl text-sm font-medium border border-emerald-100 animate-in slide-in-from-top-2">
+              <CheckCircle size={18} className="shrink-0 text-emerald-500" />
+              <div>
+                <p className="font-bold">¡Archivo procesado!</p>
+                <p className="text-emerald-600/80 text-xs mt-0.5">{fileSuccessMsg}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ================================================== */}
+        {/* DIVISOR                                            */}
+        {/* ================================================== */}
+        <div className="relative flex items-center">
+          <div className="flex-grow border-t border-slate-200"></div>
+          <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">O utiliza un enlace</span>
+          <div className="flex-grow border-t border-slate-200"></div>
+        </div>
+
+        {/* ================================================== */}
+        {/* SECCIÓN 2: SCRAPING DE URL                         */}
+        {/* ================================================== */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">2. Entrenar con Sitio Web</h3>
+          <form onSubmit={entrenarModeloUrl} className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LinkIcon size={18} className="text-slate-400" />
+              </div>
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                disabled={isProcessingUrl}
+                placeholder="https://www.miempresa.com/quienes-somos"
+                className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isProcessingUrl || !urlInput.trim()}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {isProcessingUrl ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Procesando...
+                </>
+              ) : (
+                "Extraer y Entrenar"
+              )}
+            </button>
+          </form>
+
+          {/* Feedback URL */}
+          {urlFeedback.type === "error" && (
+            <div className="mt-4 flex items-center gap-3 text-rose-600 bg-rose-50 p-3 rounded-xl text-sm font-medium border border-rose-100 animate-in slide-in-from-top-2">
+              <AlertCircle size={18} className="shrink-0" /> <p>{urlFeedback.message}</p>
+            </div>
+          )}
+          {urlFeedback.type === "success" && (
+            <div className="mt-4 flex items-center gap-3 text-emerald-700 bg-emerald-50 p-3 rounded-xl text-sm font-medium border border-emerald-100 animate-in slide-in-from-top-2">
+              <CheckCircle size={18} className="shrink-0 text-emerald-500" />
+              <div>
+                <p className="font-bold">¡URL analizada!</p>
+                <p className="text-emerald-600/80 text-xs mt-0.5">{urlFeedback.message}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
-
-      {/* --- FEEDBACK VISUAL --- */}
-      {error && (
-        <div className="mt-6 flex items-center gap-3 text-rose-600 bg-rose-50 p-4 rounded-xl text-sm font-medium border border-rose-100 animate-in slide-in-from-top-2">
-          <AlertCircle size={20} className="shrink-0" />
-          <p>{error}</p>
-        </div>
-      )}
-
-      {successMsg && !error && (
-        <div className="mt-6 flex items-center gap-3 text-emerald-700 bg-emerald-50 p-4 rounded-xl text-sm font-medium border border-emerald-100 animate-in slide-in-from-top-2">
-          <CheckCircle size={20} className="shrink-0 text-emerald-500" />
-          <div>
-            <p className="font-bold">¡Entrenamiento exitoso!</p>
-            <p className="text-emerald-600/80 text-xs mt-0.5">{successMsg}</p>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
