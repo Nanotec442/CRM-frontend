@@ -35,8 +35,8 @@ function Sidebar() {
   return (
     <aside className="w-64 shrink-0 flex flex-col h-full bg-slate-950 text-white p-4">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold">PIVOT Manager</h2>
-        <p className="text-sm text-slate-400 mt-1 mb-8">Panel administrativo</p>
+        <h2 className="text-3 font-bold">Panel administrativo</h2>
+        <p className="text-sm text-slate-400 mt-1 mb-8"></p>
 
         <nav className="space-y-2">
           <NavLink
