@@ -29,6 +29,7 @@ import Equipo from "../pages/private/Equipo";
 import AsistenteIA from "../pages/private/AsistenteIA";
 import Configuracion from "../pages/private/Configuracion";
 import Documentos from "../pages/private/Documentos";
+import Inbox from "../pages/private/Inbox";
 
 function AppRouter() {
   return (
@@ -46,7 +47,6 @@ function AppRouter() {
           <Route path="reservar/:tenantId" element={<LandingReservas />} />
         </Route>
 
-        {/* ── Rutas Privadas ── */}
         {/* ── Panel Superadmin ── */}
         <Route
           path="/superadmin"
@@ -73,6 +73,7 @@ function AppRouter() {
           <Route index element={<Dashboard />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="clientes/:id" element={<ClienteDetalle />} />
+          <Route path="inbox" element={<Inbox />} />
           <Route path="reservas" element={<Reservas />} />
           <Route path="activos" element={<Activos />} />
           <Route path="reportes" element={<Reportes />} />

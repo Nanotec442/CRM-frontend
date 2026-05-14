@@ -1,20 +1,17 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useMemo } from "react";
+import logoPivot from "../../assets/pivot.png";
 
 function Sidebar() {
   const navigate = useNavigate();
 
-  // Leer permisos del JWT para controlar visibilidad de secciones
   const puedeAdministrarUsuarios = useMemo(() => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return false;
       const payload = jwtDecode(token);
-      // Superadmin siempre puede ver todo
       if (payload.is_superadmin) return true;
-      // Buscar permiso en el rol del usuario
-      // El backend incluye permisos en el token o los validamos por rol
       return payload.permisos?.administrar_usuarios === true;
     } catch {
       return false;
@@ -34,8 +31,18 @@ function Sidebar() {
 
   return (
     <aside className="w-64 shrink-0 flex flex-col h-full bg-slate-950 text-white p-4">
-      <div className="mb-8">
-        <h2 className="text-3 font-bold">Panel administrativo</h2>
+      <div className="mb-8 grow">
+        
+        {/* Contenedor de la imagen agregado aquí */}
+        <div className="flex justify-center mb-6">
+          <img
+            src={logoPivot}
+            alt="Logo Pivot 360 Software Hub"
+            className="h-16 w-auto object-contain"
+          />
+        </div>
+
+        <h2 className="text-3 font-bold text-center">Panel administrativo</h2>
         <p className="text-sm text-slate-400 mt-1 mb-8"></p>
 
         <nav className="space-y-2">
@@ -52,6 +59,13 @@ function Sidebar() {
             className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}
           >
             Gestión de Clientes
+          </NavLink>
+
+          <NavLink
+            to="/panel/inbox"
+            className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}
+          >
+            Inbox
           </NavLink>
 
           <NavLink
@@ -82,7 +96,6 @@ function Sidebar() {
             Gestión Documental
           </NavLink>
 
-          {/* Solo visible para administradores y superadmin */}
           {puedeAdministrarUsuarios && (
             <NavLink
               to="/panel/equipo"
