@@ -5,11 +5,17 @@ import { Mail, Lock, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import { login } from "../../services/authService";
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import GoogleLogin from "./GoogleLogin"; 
+
 function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Tu Client ID (Asegúrate de ponerlo en tu archivo .env)
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,6 +23,42 @@ function Login() {
     if (error) setError("");
   };
 
+  // 2. Extraemos la lógica de redirección y validación para reutilizarla
+  const procesarLoginExitoso = (token) => {
+    // Decodificar JWT para obtener datos del usuario
+    const payload = jwtDecode(token);
+
+    // Guardar tenant_id si existe (el payload ya lo trae desde el backend)
+    const tenantId = payload.tenant_id ?? null;
+    if (tenantId) {
+      localStorage.setItem("tenant_id", tenantId);
+    } else {
+      localStorage.removeItem("tenant_id");
+    }
+
+    localStorage.setItem("isAuth", "true");
+
+    // Superadmin sin tenant → panel igualmente
+    // Usuario normal sin tenant → error claro
+    if (!tenantId && !payload.is_superadmin) {
+      setError("Tu cuenta no tiene una organización asignada. Contacta al administrador.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("isAuth");
+      return;
+    }
+
+    // Superadmin → panel de administración global
+    if (payload.is_superadmin) {
+      navigate("/superadmin");
+      return;
+    }
+
+    // Si había una reserva pendiente antes del login, redirigir a reservas
+    const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+    navigate(returnUrl || "/panel");
+  };
+
+  // 3. Login Tradicional (Email/Password)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -24,41 +66,10 @@ function Login() {
 
     try {
       const data = await login(formData.email, formData.password);
-
-      // Guardar token
       localStorage.setItem("token", data.access_token);
-
-      // Decodificar JWT para obtener datos del usuario
-      const payload = jwtDecode(data.access_token);
-
-      // Guardar tenant_id si existe (no es obligatorio para superadmin)
-      const tenantId = data.tenant_id ?? payload.tenant_id ?? null;
-      if (tenantId) {
-        localStorage.setItem("tenant_id", tenantId);
-      } else {
-        localStorage.removeItem("tenant_id");
-      }
-
-      localStorage.setItem("isAuth", "true");
-
-      // Superadmin sin tenant → panel igualmente
-      // Usuario normal sin tenant → error claro
-      if (!tenantId && !payload.is_superadmin) {
-        setError("Tu cuenta no tiene una organización asignada. Contacta al administrador.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("isAuth");
-        return;
-      }
-
-      // Superadmin → panel de administración global
-      if (payload.is_superadmin) {
-        navigate("/superadmin");
-        return;
-      }
-
-      // Si había una reserva pendiente antes del login, redirigir a reservas
-      const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
-      navigate(returnUrl || "/panel");
+      
+      // Llamamos a la función validadora
+      procesarLoginExitoso(data.access_token);
 
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -68,6 +79,15 @@ function Login() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 4. Callback para el Login de Google
+  const handleGoogleLoginSuccess = () => {
+    // El componente GoogleLogin ya guardó el token en el localStorage
+    const token = localStorage.getItem("token");
+    if (token) {
+      procesarLoginExitoso(token);
     }
   };
 
@@ -88,8 +108,22 @@ function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* --- ZONA GOOGLE LOGIN --- */}
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            <GoogleLogin onLoginSuccess={handleGoogleLoginSuccess} />
+          </GoogleOAuthProvider>
 
+          {/* --- SEPARADOR VISUAL --- */}
+          <div className="relative flex items-center my-6">
+            <div className="grow border-t border-slate-200"></div>
+            <span className="shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
+              O inicia con tu correo
+            </span>
+            <div className="grow border-t border-slate-200"></div>
+          </div>
+
+          {/* --- FORMULARIO TRADICIONAL --- */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 Correo Electrónico

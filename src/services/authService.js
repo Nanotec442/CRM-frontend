@@ -46,6 +46,7 @@ export const authService = {
   const response = await api.patch("/auth/perfil", payload);
   return response.data;
   },
+  
 };
 
 
