@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -7,34 +7,22 @@ import authService from "../../services/authService";
 export default function GoogleLogin({ onLoginSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Configuramos el hook de Google
   const loginConGoogle = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
+    flow: "implicit",
+    onSuccess: async (tokenResponse) => {
       setIsLoading(true);
       try {
-        // codeResponse.access_token es el token que nos da Google en el frontend
-        // Se lo enviamos a nuestro backend de FastAPI
-        const data = await authService.loginGoogle(codeResponse.access_token);
-        
-        // Guardamos el token de nuestro propio backend
+        const data = await authService.loginGoogle(tokenResponse.access_token);
         localStorage.setItem("token", data.access_token);
-        
         toast.success("¡Inicio de sesión con Google exitoso!");
-        
-        // Ejecutamos la función que nos pasen por props (ej: redirigir al dashboard)
         if (onLoginSuccess) onLoginSuccess();
-        
       } catch (error) {
-        console.error("Error validando token con backend:", error);
         toast.error(error.response?.data?.detail || "Error al iniciar sesión con Google.");
       } finally {
         setIsLoading(false);
       }
     },
-    onError: (error) => {
-      console.log("Error desde Google UI:", error);
-      toast.error("Se canceló o falló el inicio de sesión con Google.");
-    },
+    onError: () => toast.error("Se canceló o falló el inicio de sesión con Google."),
   });
 
   return (
@@ -47,10 +35,10 @@ export default function GoogleLogin({ onLoginSuccess }) {
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin text-slate-600" />
       ) : (
-        <img 
-          src="https://www.svgrepo.com/show/475656/google-color.svg" 
-          alt="Google logo" 
-          className="w-5 h-5" 
+        <img
+          src="https://www.svgrepo.com/show/475656/google-color.svg"
+          alt="Google logo"
+          className="w-5 h-5"
         />
       )}
       <span>Continuar con Google</span>

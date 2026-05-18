@@ -30,6 +30,7 @@ import AsistenteIA from "../pages/private/AsistenteIA";
 import Configuracion from "../pages/private/Configuracion";
 import Documentos from "../pages/private/Documentos";
 import Inbox from "../pages/private/Inbox";
+import CompletarRegistro from "../pages/public/CompletarRegistro";
 
 function AppRouter() {
   return (
@@ -45,6 +46,7 @@ function AppRouter() {
           <Route path="reset-password" element={<ResetPassword />} />
           <Route path="retorno-pago" element={<RetornoWebpay />} />
           <Route path="reservar/:tenantId" element={<LandingReservas />} />
+          <Route path="completar-registro" element={<CompletarRegistro />} />
         </Route>
 
         {/* ── Panel Superadmin ── */}

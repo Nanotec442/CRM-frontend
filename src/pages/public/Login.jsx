@@ -6,7 +6,7 @@ import Navbar from "../../components/layout/Navbar";
 import { login } from "../../services/authService";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import GoogleLogin from "./GoogleLogin"; 
+import GoogleLogin from "./GoogleLogin";
 
 function Login() {
   const navigate = useNavigate();
@@ -38,12 +38,9 @@ function Login() {
 
     localStorage.setItem("isAuth", "true");
 
-    // Superadmin sin tenant → panel igualmente
-    // Usuario normal sin tenant → error claro
+
     if (!tenantId && !payload.is_superadmin) {
-      setError("Tu cuenta no tiene una organización asignada. Contacta al administrador.");
-      localStorage.removeItem("token");
-      localStorage.removeItem("isAuth");
+      navigate("/completar-registro")
       return;
     }
 
@@ -67,7 +64,7 @@ function Login() {
     try {
       const data = await login(formData.email, formData.password);
       localStorage.setItem("token", data.access_token);
-      
+
       // Llamamos a la función validadora
       procesarLoginExitoso(data.access_token);
 
@@ -193,6 +190,17 @@ function Login() {
                 </>
               )}
             </button>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-slate-500 font-medium">
+                ¿No tienes una cuenta?{" "}
+                <Link
+                  to="/register"
+                  className="text-indigo-600 font-bold hover:text-indigo-500 transition-colors"
+                >
+                  Crear cuenta gratis
+                </Link>
+              </p>
+            </div>
           </form>
 
         </div>

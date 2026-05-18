@@ -22,6 +22,11 @@ export const authService = {
     return response.data;
   },
 
+  async loginGoogle(token) {
+    const response = await api.post("/auth/google", {token});
+    return response.data;
+  },
+
   async register(payload) {
     const response = await api.post("/auth/register", payload);
     return response.data;

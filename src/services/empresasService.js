@@ -48,9 +48,12 @@ const empresasService = {
   },
 
   registroEmpresa(payload) {
-    // POST /empresas/registro-empresa → público (sin auth)
     return api.post("/empresas/registro-empresa", payload).then((r) => r.data);
   },
+
+  completarRegistro(payload) {
+  return api.post("/empresas/completar-registro", payload).then((r) => r.data);
+},
 
   // ── Subusuarios (equipo) ─────────────────────────────────────────────────
   // Requieren permiso: administrar_usuarios
