@@ -166,7 +166,7 @@ const PipelineHeader = ({ totalLeads, totalValorGlobal, columnas }) => (
         Gestión visual de oportunidades comerciales y seguimiento de leads.
       </p>
     </section>
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
@@ -649,7 +649,7 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-90px)] min-h-[500px] w-full flex-col font-sans">
+    <div className="flex h-[calc(100vh-90px)] min-h-125 w-full flex-col font-sans">
       <PipelineHeader totalLeads={totalLeads} totalValorGlobal={totalValorGlobal} columnas={columnas} />
 
       {(errorCarga || errorMovimiento || tarjetasSinColumnaValida.length > 0) && (
@@ -685,7 +685,7 @@ const PipelineClientes = ({ clientes: clientesReales = [] }) => {
             {columnas.length < 9 && (
               <button
                 onClick={() => setModal({ tipo: "nueva" })}
-                className="group flex h-full min-h-[200px] w-[288px] shrink-0 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
+                className="group flex h-full min-h-50 w-[288px] shrink-0 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 text-slate-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white border border-slate-200 shadow-sm group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-colors">
                   <Plus size={20} />

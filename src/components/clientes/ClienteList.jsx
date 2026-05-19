@@ -11,7 +11,7 @@ function ClienteList({
   onNuevo,
   onMoverAPipeline,
   onToggleEstado,
-  onEliminar, // null si el usuario no es superadmin — controla visibilidad del botón eliminar
+  onEliminar,
 }) {
   const navigate = useNavigate();
 
@@ -34,8 +34,7 @@ function ClienteList({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden font-sans">
 
-      {/* Buscador */}
-      <div className="px-6 py-4 border-b border-slate-100">
+      <div className="px-4 sm:px-6 py-4 border-b border-slate-100">
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
           <input
@@ -49,7 +48,6 @@ function ClienteList({
             <button
               onClick={() => setBusqueda("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg font-medium transition-colors"
-              title="Limpiar búsqueda"
             >
               ×
             </button>
@@ -57,7 +55,6 @@ function ClienteList({
         </div>
       </div>
 
-      {/* Tabla */}
       <div className="overflow-x-auto">
         {loading ? (
           <SkeletonTable />
@@ -67,19 +64,19 @@ function ClienteList({
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">
                   Contacto
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">
                   Empresa
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -102,27 +99,27 @@ function ClienteList({
                 return (
                   <tr
                     key={String(id)}
-                    className={`hover:bg-slate-50/80 transition-colors group ${
-                      esInactivo ? "opacity-60" : ""
-                    }`}
+                    className={`hover:bg-slate-50/80 transition-colors group ${esInactivo ? "opacity-60" : ""}`}
                   >
-                    {/* Nombre */}
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
                           {iniciales}
                         </div>
-                        <button
-                          onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
-                          className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors text-left"
-                        >
-                          {c.nombre}
-                        </button>
+                        <div className="min-w-0">
+                          <button
+                            onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
+                            className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors text-left truncate block max-w-[140px] sm:max-w-none"
+                          >
+                            {c.nombre}
+                          </button>
+                          {/* Email visible solo en móvil */}
+                          <p className="text-xs text-slate-400 truncate md:hidden mt-0.5">{c.email}</p>
+                        </div>
                       </div>
                     </td>
 
-                    {/* Contacto */}
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                       <div className="space-y-1">
                         <div className="text-slate-600 font-medium">{c.email}</div>
                         {c.telefono && (
@@ -131,8 +128,7 @@ function ClienteList({
                       </div>
                     </td>
 
-                    {/* Empresa */}
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 hidden lg:table-cell whitespace-nowrap">
                       {c.empresa ? (
                         <span className="font-medium text-slate-700 flex items-center gap-1.5">
                           <span className="text-slate-400">🏢</span> {c.empresa}
@@ -142,16 +138,12 @@ function ClienteList({
                       )}
                     </td>
 
-                    {/* Estado */}
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <EstadoBadge estado={c.estado} />
                     </td>
 
-                    {/* Acciones */}
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-
-                        {/* Activar / Desactivar */}
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         <button
                           onClick={() => onToggleEstado(c.id ?? c.cliente_id, estaActivo)}
                           title={estaActivo ? "Desactivar cliente" : "Activar cliente"}
@@ -164,20 +156,18 @@ function ClienteList({
                           {estaActivo ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                         </button>
 
-                        {/* Mover al pipeline — solo si no está inactivo */}
                         {!esInactivo && (
                           <button
                             onClick={() => onMoverAPipeline(c.id ?? c.cliente_id)}
                             title="Crear Oportunidad en Pipeline"
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors hidden sm:block"
                           >
                             <KanbanSquare size={18} />
                           </button>
                         )}
 
-                        <div className="w-px h-4 bg-slate-200 mx-1" />
+                        <div className="w-px h-4 bg-slate-200 mx-0.5 sm:mx-1 hidden sm:block" />
 
-                        {/* Ver perfil */}
                         <button
                           onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
                           title="Ver perfil completo"
@@ -186,7 +176,6 @@ function ClienteList({
                           <ExternalLink size={18} />
                         </button>
 
-                        {/* Editar */}
                         <button
                           onClick={() => onEditar(c)}
                           title="Editar Cliente"
@@ -195,12 +184,11 @@ function ClienteList({
                           <Edit2 size={18} />
                         </button>
 
-                        {/* Eliminar — solo visible si onEliminar no es null (superadmin) */}
                         {onEliminar && (
                           <button
                             onClick={() => onEliminar(c.id ?? c.cliente_id, c.nombre)}
                             title="Eliminar permanentemente"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors hidden sm:block"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -216,7 +204,7 @@ function ClienteList({
       </div>
 
       {!loading && clientesUnicos.length > 0 && (
-        <div className="px-6 py-3.5 border-t border-slate-100 text-xs font-medium text-slate-500 bg-slate-50/30">
+        <div className="px-4 sm:px-6 py-3.5 border-t border-slate-100 text-xs font-medium text-slate-500 bg-slate-50/30">
           {clientesUnicos.length} resultado{clientesUnicos.length !== 1 ? "s" : ""}
           {busqueda && ` para "${busqueda}"`}
         </div>
@@ -225,7 +213,6 @@ function ClienteList({
   );
 }
 
-// ── EstadoBadge ───────────────────────────────────────────────────────────────
 const ESTADOS_VALIDOS = ["activo", "activa", "inactivo", "archivado", "prospecto", "nuevo"];
 
 function EstadoBadge({ estado }) {
@@ -237,13 +224,11 @@ function EstadoBadge({ estado }) {
     archivado: { label: "Archivado", cls: "bg-rose-50 text-rose-600 border-rose-200" },
     prospecto: { label: "Prospecto", cls: "bg-amber-50 text-amber-700 border-amber-200" },
   };
-
   const key = (estado ?? "nuevo").toLowerCase();
   const esValido = ESTADOS_VALIDOS.includes(key);
   const { label, cls } = esValido
     ? map[key]
     : { label: "Nuevo", cls: "bg-indigo-50 text-indigo-700 border-indigo-200" };
-
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${cls}`}>
       {label}
@@ -251,7 +236,6 @@ function EstadoBadge({ estado }) {
   );
 }
 
-// ── SkeletonTable ─────────────────────────────────────────────────────────────
 function SkeletonTable() {
   return (
     <div className="divide-y divide-slate-50">
@@ -270,7 +254,6 @@ function SkeletonTable() {
   );
 }
 
-// ── EmptyState ────────────────────────────────────────────────────────────────
 function EmptyState({ busqueda, onNuevo }) {
   return (
     <div className="py-20 text-center flex flex-col items-center justify-center">

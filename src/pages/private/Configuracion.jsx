@@ -174,7 +174,7 @@ const Configuracion = () => {
       </section>
 
       {/* LAYOUT PRINCIPAL */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
         {/* Navegación Lateral */}
         <aside className="lg:col-span-3">

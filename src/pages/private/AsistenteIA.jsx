@@ -104,7 +104,7 @@ const AsistenteIA = () => {
 
   // --- 4. RENDERIZADO DE LA INTERFAZ ---
   return (
-    <div className="space-y-6 font-sans h-[calc(100vh-120px)] flex flex-col max-w-5xl mx-auto animate-in fade-in duration-500">
+    <div className="space-y-4 sm:space-y-6 font-sans h-[calc(100vh-160px)] sm:h-[calc(100vh-120px)] flex flex-col max-w-5xl mx-auto animate-in fade-in duration-500">
       
       {/* --- Encabezado --- */}
       <section className="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200">

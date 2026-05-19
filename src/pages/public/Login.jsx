@@ -93,7 +93,7 @@ function Login() {
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-105 rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
 
           <div className="mb-8 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 shadow-inner">

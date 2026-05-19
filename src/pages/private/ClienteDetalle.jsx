@@ -151,8 +151,8 @@ function ClienteDetalle() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-slate-800 text-white text-lg font-bold flex items-center justify-center shrink-0 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 text-white text-lg font-bold flex items-center justify-center shrink-0 shadow-sm">
             {(cliente?.nombre_completo ?? "?")
               .split(" ")
               .slice(0, 2)

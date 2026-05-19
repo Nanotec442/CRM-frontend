@@ -113,9 +113,9 @@ export default function ReservasOnlineConfig() {
         <p className="text-sm text-slate-500">
           Elige un nombre corto para tu empresa que sea fácil de compartir y recordar.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex flex-1 rounded-xl border border-slate-200 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
-            <span className="inline-flex items-center px-4 bg-slate-50 text-slate-500 text-sm font-medium border-r border-slate-200 shrink-0">
+            <span className="hiden sm:inline-flex items-center px-4 bg-slate-50 text-slate-500 text-sm font-medium border-r border-slate-200 shrink-0">
               {baseUrl}/reservar/
             </span>
             <input

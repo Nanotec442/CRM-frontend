@@ -273,12 +273,12 @@ function Equipo() {
 
       <section className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestión de Equipo</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Gestión de Equipo</h1>
           <p className="mt-2 text-slate-600">Administra los accesos y permisos de tu personal en PIVOT.</p>
         </div>
         <button
           onClick={() => setVistaActual("nuevo")}
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:bg-indigo-700 transition-colors active:scale-95"
+          className="w-full sm:w-auto inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:bg-indigo-700 transition-colors active:scale-95"
         >
           <Plus size={18} />
           Nuevo Usuario

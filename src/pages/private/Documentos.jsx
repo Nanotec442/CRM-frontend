@@ -119,7 +119,7 @@ function Documentos() {
     <div className="space-y-8 font-sans pb-10">
 
       <section>
-        <h1 className="text-3xl font-bold text-slate-900">Documentos y Contratos</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Documentos y Contratos</h1>
         <p className="mt-2 text-slate-600">
           Gestiona firmas legales, contratos y su estado de validez por cliente.
         </p>
@@ -146,7 +146,8 @@ function Documentos() {
               </div>
             </div>
 
-            <div className="overflow-y-auto max-h-[500px]">
+                  <div className="overflow-y-auto max-h-50 lg:max-h-125">
+
               {loadingClientes ? (
                 <div className="py-8 text-center">
                   <Loader2 size={20} className="animate-spin mx-auto text-slate-400" />

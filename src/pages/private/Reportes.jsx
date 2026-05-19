@@ -28,14 +28,14 @@ const Reportes = () => {
     <div className="space-y-8 font-sans">
       {/* Encabezado del Panel */}
       <section>
-        <h1 className="text-3xl font-bold text-slate-900">Panel de Reportes</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Panel de Reportes</h1>
         <p className="mt-2 text-slate-600">
           Resumen analítico de operaciones y rendimiento del sistema.
         </p>
       </section>
 
       {/* SECCIÓN 1: Tarjetas de Métricas (KPIs) */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:-translate-y-1 transition-transform">
           <p className="text-sm font-medium text-slate-500">Total Reservas</p>
           <h2 className="mt-3 text-3xl font-bold text-slate-900">{kpis?.totalReservas || 0}</h2>

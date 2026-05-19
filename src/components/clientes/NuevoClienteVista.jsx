@@ -41,16 +41,12 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
       toast.error("El archivo excede el límite de 10MB permitido.");
       return;
     }
-
     setIsProcessing(true);
     setError(null);
-
     const payload = new FormData();
     payload.append('archivo', file);
-
     try {
       const data = await iaService.cargaInteligenteClientes(payload);
-
       if (data.datos?.clientes?.length > 0) {
         const info = data.datos.clientes[0];
         setFormData(prev => ({
@@ -84,7 +80,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
 
   const handleGuardar = () => {
     setError(null);
-
     if (!formData.nombre_completo.trim()) {
       setError("El nombre del cliente es obligatorio.");
       toast.error("El nombre del cliente es obligatorio.");
@@ -95,14 +90,13 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
       toast.error("El correo electrónico es obligatorio.");
       return;
     }
-
     onGuardar({
-      nombre:        formData.nombre_completo,
-      email:         formData.email,
-      telefono:      formData.telefono,
-      empresa:       formData.empresa,
-      rut:           formData.rut_documento,
-      origen:        "manual",
+      nombre:   formData.nombre_completo,
+      email:    formData.email,
+      telefono: formData.telefono,
+      empresa:  formData.empresa,
+      rut:      formData.rut_documento,
+      origen:   "manual",
     });
   };
 
@@ -121,9 +115,9 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
 
         {/* Columna izquierda: Carga IA */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-slate-900">Carga Inteligente</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Carga Inteligente</h2>
               <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
                 Powered by AI
               </span>
@@ -134,7 +128,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
             </p>
 
             <div
-              className={`relative border-2 border-dashed rounded-xl p-8 md:p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-55
+              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-[180px]
                 ${dragActive ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'}
                 ${isProcessing ? 'opacity-70 pointer-events-none' : ''}`}
               onDragEnter={handleDrag}
@@ -166,12 +160,12 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
             </div>
 
             {error ? (
-              <div className="mt-6 flex items-center gap-2.5 text-rose-600 bg-rose-50 p-3 rounded-lg text-xs font-medium">
+              <div className="mt-5 flex items-center gap-2.5 text-rose-600 bg-rose-50 p-3 rounded-lg text-xs font-medium">
                 <AlertCircle size={16} className="shrink-0" />
                 <p>{error}</p>
               </div>
             ) : (
-              <div className="mt-6 flex items-center gap-2.5">
+              <div className="mt-5 flex items-center gap-2.5">
                 <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isProcessing ? "bg-indigo-500 animate-pulse" : "bg-emerald-500"}`} />
                 <span className="text-sm text-slate-500 italic font-medium">
                   {isProcessing ? "Extrayendo información..." : "IA lista para procesar información"}
@@ -188,7 +182,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
               ¿Cómo funciona?
             </h4>
             <p className="text-indigo-800/80 text-xs mt-2.5 leading-relaxed font-medium">
-              Al subir una imagen del carnet o una factura, PIVOT utiliza el motor <b>Gemini 2.5 Flash</b> para identificar nombres y documentos legales, rellenando el formulario de la derecha automáticamente.
+              Al subir una imagen del carnet o una factura, PIVOT utiliza el motor <b>Gemini 2.5 Flash</b> para identificar nombres y documentos legales, rellenando el formulario automáticamente.
             </p>
           </div>
         </div>
@@ -197,18 +191,17 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
-            <div className="p-6 border-b border-slate-100">
+            <div className="p-5 sm:p-6 border-b border-slate-100">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
                 <User size={20} className="text-slate-400" />
                 Confirmación de Datos
               </h3>
             </div>
 
-            <div className="p-6 md:p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-5 sm:p-8 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                {/* Nombre Completo */}
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Nombre Completo <span className="text-rose-500">*</span>
                   </label>
@@ -224,7 +217,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                   </div>
                 </div>
 
-                {/* RUT */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">RUT / Documento</label>
                   <div className="relative">
@@ -239,7 +231,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                   </div>
                 </div>
 
-                {/* Empresa */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Empresa</label>
                   <input
@@ -251,7 +242,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                   />
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Correo Electrónico <span className="text-rose-500">*</span>
@@ -269,7 +259,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                   </div>
                 </div>
 
-                {/* Teléfono */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Teléfono</label>
                   <div className="relative">
@@ -285,7 +274,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={handleGuardar}
@@ -301,7 +290,6 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -284,9 +284,9 @@ function Clientes() {
     <div className="space-y-8 font-sans">
 
       {/* Header */}
-      <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <section className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Clientes</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Clientes</h1>
           <p className="mt-2 text-slate-600">
             Gestiona tu cartera de clientes y haz seguimiento de sus estados.
             Tienes <span className="font-semibold">{totalActivos}</span> registros activos.
@@ -307,7 +307,7 @@ function Clientes() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => { setVista("pipeline"); setFormVisible(false); }}
@@ -337,7 +337,7 @@ function Clientes() {
               setFormVisible(false);
               setVista("nuevo");
             }}
-            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors shadow-sm"
           >
             + Nuevo cliente
           </button>

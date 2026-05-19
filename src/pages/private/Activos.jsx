@@ -65,7 +65,7 @@ const Activos = () => {
           />
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[400px_1fr] animate-in fade-in duration-300">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-[400px_1fr] animate-in fade-in duration-300">
           
           <aside>
             <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 h-fit">

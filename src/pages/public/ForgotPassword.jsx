@@ -27,7 +27,7 @@ function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <main className="flex-1 flex items-center justify-center p-6">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:p-6">
         <div className="w-full max-w-md rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
           
           {/* Botón Volver */}

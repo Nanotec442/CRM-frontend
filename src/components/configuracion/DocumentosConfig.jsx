@@ -90,7 +90,7 @@ const DocumentosConfig = ({ onAIComplete }) => {
 
   // --- RENDERIZADO DE LA INTERFAZ ---
   return (
-    <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm transition-all duration-300 font-sans">
+    <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
       
       {/* Header */}
       <div className="flex justify-between items-center mb-4">

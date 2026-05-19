@@ -78,15 +78,15 @@ function Register() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center p-6 py-12">
-        <div className="w-full max-w-3xl rounded-3xl bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:p-6 sm:py-12">
+        <div className="w-full max-w-3xl rounded-3xl bg-white p-6 sm:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
           
           {/* Cabecera */}
           <div className="mb-8 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600 shadow-inner">
               <Building2 size={28} strokeWidth={1.5} />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Crea tu espacio de trabajo</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Crea tu espacio de trabajo</h1>
             <p className="mt-2 text-sm text-slate-500 font-medium max-w-md">
               Configura tu organización en PIVOT y obtén acceso total a las herramientas del CRM.
             </p>

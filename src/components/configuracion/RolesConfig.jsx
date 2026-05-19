@@ -263,8 +263,8 @@ const RolesConfig = () => {
         </div>
 
         {/* ── Tabla de roles ── */}
-        <div className="xl:col-span-2 border border-slate-200 rounded-2xl overflow-hidden">
-          <table className="w-full text-left">
+        <div className="xl:col-span-2 border border-slate-200 rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-125 text-left">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nombre</th>

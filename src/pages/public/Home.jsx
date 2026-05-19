@@ -8,7 +8,7 @@ function Home() {
       <Navbar />
 
       <main>
-        <section className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-10 px-6 py-16 lg:grid-cols-2">
+        <section className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-10 px-4 sm:px-6 py-12 lg:py-16 lg:grid-cols-2">
           
           {/* Columna Izquierda: Textos y Botones */}
           <div className="animate-in fade-in slide-in-from-left-4 duration-700">
@@ -17,7 +17,7 @@ function Home() {
               Gestión moderna de clientes y servicios
             </span>
 
-            <h1 className="mt-6 text-5xl font-bold leading-tight text-slate-900 tracking-tight">
+            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-slate-900 tracking-tight">
               Organiza tu negocio, consulta disponibilidad y gestiona todo desde un solo lugar
             </h1>
 

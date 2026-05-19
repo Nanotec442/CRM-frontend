@@ -43,16 +43,17 @@ const Reservas = () => {
   return (
     <div className="space-y-8 font-sans">
       {/* Encabezado Principal */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <section className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestión de Reservas</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Gestión de Reservas</h1>
           <p className="mt-2 text-slate-600">
             Administra los activos y el calendario de ocupación en tiempo real.
           </p>
         </div>
         
         {/* Selector de Vista (Tabs) consistente con Clientes */}
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-fit">
+
           <button
             onClick={() => setVista("calendario")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${

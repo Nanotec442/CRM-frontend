@@ -41,8 +41,8 @@ function CompletarRegistro() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center p-6 py-12">
-        <div className="w-full max-w-xl rounded-3xl bg-white p-8 sm:p-10 shadow-xl border border-slate-100">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:p-6 sm:py-12">
+        <div className="w-full max-w-xl rounded-3xl bg-white p-6 sm:p-10 shadow-xl border border-slate-100">
           
           <div className="mb-8 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">

@@ -118,7 +118,7 @@ function Dashboard() {
   return (
     <div className="space-y-8 font-sans">
       <section>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
         <p className="mt-2 text-slate-600">
           Bienvenido al panel de gestión. Aquí puedes visualizar el estado general de PIVOT.
         </p>
@@ -130,7 +130,7 @@ function Dashboard() {
         </div>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 hover:-translate-y-1 transition-transform">
           <p className="text-sm font-medium text-slate-500">Total Clientes</p>
           <h2 className="mt-3 text-3xl font-bold text-slate-900">{metricas.totalClientes}</h2>

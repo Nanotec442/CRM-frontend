@@ -172,7 +172,7 @@ export default function LandingReservas() {
 
       {/* Navbar mínimo */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-slate-900">
             <div className="bg-indigo-600 text-white p-1.5 rounded-lg shadow-sm">
               <Hexagon size={20} fill="currentColor" strokeWidth={1} />
@@ -185,15 +185,15 @@ export default function LandingReservas() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
 
         {/* Encabezado */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Reserva un espacio</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Reserva un espacio</h1>
           <p className="mt-2 text-slate-500">Selecciona un activo, elige la fecha y verifica disponibilidad.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
           {/* Columna izquierda — Activos + configuración */}
           <div className="space-y-6">
@@ -337,7 +337,7 @@ export default function LandingReservas() {
                       key={i}
                       onClick={() => !outside && !esPasado && setDiaSeleccionado(date)}
                       disabled={outside || esPasado}
-                      className={`min-h-[72px] border-r border-b border-slate-100 p-2 flex flex-col items-center transition-all
+                      className={`min-h-13 sm:min-h-18 border-r border-b border-slate-100 p-1 sm:p-2 flex flex-col items-center transition-all
                         ${outside || esPasado ? "bg-slate-50/50 cursor-not-allowed" : "hover:bg-indigo-50/50 cursor-pointer"}
                         ${esSeleccionado ? "bg-indigo-50 ring-2 ring-inset ring-indigo-400" : ""}
                       `}
