@@ -1,16 +1,16 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 function ProtectedRoute({ children, requireSuperAdmin = false }) {
   const token = localStorage.getItem("token");
-  const ahoraRef = useRef(Math.floor(Date.now() / 1000));
 
   const authResult = useMemo(() => {
     if (!token) return { valid: false, redirect: "/login" };
     try {
       const payload = jwtDecode(token);
-      const ahora = ahoraRef.current;
+      // eslint-disable-next-line react-hooks/purity
+      const ahora = Math.floor(Date.now() / 1000);
 
       if (payload.exp && payload.exp < ahora) {
         localStorage.removeItem("token");
