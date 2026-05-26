@@ -92,7 +92,7 @@ const RolesConfig = () => {
       setLoading(true);
       const data = await rolesService.listar();
       setRoles(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch {
       toast.error("No se pudieron cargar los roles.");
     } finally {
       setLoading(false);

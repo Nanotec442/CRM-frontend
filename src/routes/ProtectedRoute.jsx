@@ -1,43 +1,38 @@
+import { useMemo, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
-/**
- * Protege rutas privadas validando el JWT localmente.
- * requireSuperAdmin=true → solo permite superadmin
- * Sin prop → permite cualquier usuario autenticado
- */
 function ProtectedRoute({ children, requireSuperAdmin = false }) {
   const token = localStorage.getItem("token");
+  const ahoraRef = useRef(Math.floor(Date.now() / 1000));
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  const authResult = useMemo(() => {
+    if (!token) return { valid: false, redirect: "/login" };
+    try {
+      const payload = jwtDecode(token);
+      const ahora = ahoraRef.current;
 
-  try {
-    const payload = jwtDecode(token);
-    const ahora = Math.floor(Date.now() / 1000);
-
-    // Token expirado
-    if (payload.exp && payload.exp < ahora) {
+      if (payload.exp && payload.exp < ahora) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("tenant_id");
+        return { valid: false, redirect: "/login" };
+      }
+      if (requireSuperAdmin && !payload.is_superadmin) {
+        return { valid: false, redirect: "/panel" };
+      }
+      if (!requireSuperAdmin && payload.is_superadmin) {
+        return { valid: false, redirect: "/superadmin" };
+      }
+      return { valid: true };
+    } catch {
       localStorage.removeItem("token");
       localStorage.removeItem("tenant_id");
-      return <Navigate to="/login" replace />;
+      return { valid: false, redirect: "/login" };
     }
+  }, [token, requireSuperAdmin]);
 
-    // Ruta solo para superadmin
-    if (requireSuperAdmin && !payload.is_superadmin) {
-      return <Navigate to="/panel" replace />;
-    }
-
-    // Superadmin intentando entrar al panel CRM normal → redirigir a superadmin
-    if (!requireSuperAdmin && payload.is_superadmin) {
-      return <Navigate to="/superadmin" replace />;
-    }
-
-  } catch {
-    localStorage.removeItem("token");
-    localStorage.removeItem("tenant_id");
-    return <Navigate to="/login" replace />;
+  if (!authResult.valid) {
+    return <Navigate to={authResult.redirect} replace />;
   }
 
   return children;

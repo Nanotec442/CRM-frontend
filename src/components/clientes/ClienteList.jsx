@@ -109,7 +109,7 @@ function ClienteList({
                         <div className="min-w-0">
                           <button
                             onClick={() => navigate(`/panel/clientes/${c.id ?? c.cliente_id}`)}
-                            className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors text-left truncate block max-w-[140px] sm:max-w-none"
+                            className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors text-left truncate block max-w-35 sm:max-w-none"
                           >
                             {c.nombre}
                           </button>
@@ -131,7 +131,7 @@ function ClienteList({
                     <td className="px-4 sm:px-6 py-4 hidden lg:table-cell whitespace-nowrap">
                       {c.empresa ? (
                         <span className="font-medium text-slate-700 flex items-center gap-1.5">
-                          <span className="text-slate-400">🏢</span> {c.empresa}
+                          <span className="text-slate-400"></span> {c.empresa}
                         </span>
                       ) : (
                         <span className="text-slate-400 text-xs">Sin empresa</span>

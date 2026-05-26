@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 
 const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MESES = [
@@ -20,10 +20,6 @@ function fmtHora(date) {
     hour: "2-digit", 
     minute: "2-digit",
     hour12: false });
-}
-
-function fmtFecha(date) {
-  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 }
 
 function getDaysInMonth(year, month) {

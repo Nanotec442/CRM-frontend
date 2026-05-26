@@ -1,52 +1,48 @@
 import { useState } from "react";
 
-/**
- * Formulario de creación de activos.
- * Rediseñado para coincidir exactamente con la estructura de ReservaForm.
- */
 const ActivoForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
     nombre: "",
+    sku: "",
     tipo: "",
+    descripcion: "",
     precio_base: "",
-    tiempo_buffer_minutos: "",
-    estado: "Operativo",
+    buffer_limpieza_minutos: "",
+    estado: "Disponible",
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     onSubmit({
       ...form,
       precio_base: form.precio_base ? Number(form.precio_base) : 0,
-      tiempo_buffer_minutos: form.tiempo_buffer_minutos
-        ? Number(form.tiempo_buffer_minutos)
+      buffer_limpieza_minutos: form.buffer_limpieza_minutos
+        ? Number(form.buffer_limpieza_minutos)
         : 0,
     });
-
     setForm({
       nombre: "",
+      sku: "",
       tipo: "",
+      descripcion: "",
       precio_base: "",
-      tiempo_buffer_minutos: "",
-      estado: "operativo",
+      buffer_limpieza_minutos: "",
+      estado: "Disponible",
     });
   };
 
-  // Clases compartidas para consistencia total
-  const inputClasses = "mt-1.5 w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-slate-700";
-  const labelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1";
+  const inputClasses =
+    "mt-1.5 w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-slate-700";
+  const labelClasses =
+    "text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Campo principal: Nombre */}
+
       <div>
         <label className={labelClasses}>Nombre del Activo</label>
         <input
@@ -59,7 +55,18 @@ const ActivoForm = ({ onSubmit }) => {
         />
       </div>
 
-      {/* Campo principal: Tipo */}
+      <div>
+        <label className={labelClasses}>SKU / Código interno</label>
+        <input
+          name="sku"
+          value={form.sku}
+          onChange={handleChange}
+          placeholder="Ej: SALA-01, VEH-003"
+          required
+          className={inputClasses}
+        />
+      </div>
+
       <div>
         <label className={labelClasses}>Categoría / Tipo</label>
         <input
@@ -72,7 +79,17 @@ const ActivoForm = ({ onSubmit }) => {
         />
       </div>
 
-      {/* BLOQUE TÉCNICO: Configuración secundaria (Igual al rango de fechas en Reservas) */}
+      <div>
+        <label className={labelClasses}>Descripción</label>
+        <input
+          name="descripcion"
+          value={form.descripcion}
+          onChange={handleChange}
+          placeholder="Opcional"
+          className={inputClasses}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
         <div>
           <label className={labelClasses}>Estado</label>
@@ -82,19 +99,19 @@ const ActivoForm = ({ onSubmit }) => {
             onChange={handleChange}
             className={inputClasses}
           >
-            <option value="operativo">Operativo</option>
-            <option value="mantenimiento">Mantenimiento</option>
-            <option value="fuera_servicio">Fuera de servicio</option>
+            <option value="Disponible">Disponible</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Fuera de servicio">Fuera de servicio</option>
           </select>
         </div>
 
         <div>
-          <label className={labelClasses}>Buffer (min)</label>
+          <label className={labelClasses}>Buffer limpieza (min)</label>
           <input
-            name="tiempo_buffer_minutos"
+            name="buffer_limpieza_minutos"
             type="number"
             min="0"
-            value={form.tiempo_buffer_minutos}
+            value={form.buffer_limpieza_minutos}
             onChange={handleChange}
             placeholder="15"
             className={inputClasses}
@@ -116,7 +133,6 @@ const ActivoForm = ({ onSubmit }) => {
         </div>
       </div>
 
-      {/* Botón de Acción Principal */}
       <div className="pt-2">
         <button
           type="submit"
@@ -125,6 +141,7 @@ const ActivoForm = ({ onSubmit }) => {
           Registrar Activo
         </button>
       </div>
+
     </form>
   );
 };

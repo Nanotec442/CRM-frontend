@@ -5,7 +5,7 @@ import { pagosService } from "../../services/pagosService";
 import { documentosService } from "../../services/documentosService";
 import { reservasService } from "../../services/reservasService";
 
-const ReservaCard = ({ reserva, onCancelar, onFirmar, onActualizar }) => {
+const ReservaCard = ({ reserva, onCancelar, onActualizar }) => {
   const [pagando, setPagando] = useState(false);
   const [generandoContrato, setGenerandoContrato] = useState(false);
   const [anulando, setAnulando] = useState(false);

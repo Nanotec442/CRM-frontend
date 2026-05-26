@@ -8,7 +8,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
     sku: "",
     nombre: "",
     tipo: "",
-    estado: "Operativo",
+    estado: "Disponible",
     buffer_limpieza_minutos: "",
     precio_base: "",
   });
@@ -273,7 +273,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
                       onChange={handleInputChange}
                       className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-slate-700 text-sm appearance-none bg-white"
                     >
-                      <option value="Operativo">Operativo</option>
+                      <option value="Disponible">Disponible</option>
                       <option value="Mantenimiento">Mantenimiento</option>
                       <option value="Fuera de servicio">Fuera de servicio</option>
                     </select>

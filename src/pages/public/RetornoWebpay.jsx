@@ -1,40 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
-/**
- * Página que el usuario ve después de que Transbank lo redirige de vuelta.
- * El backend ya procesó el pago en /pagos/webpay/retorno.
- * Esta página solo lee los query params que el backend dejó disponibles
- * y muestra el resultado al usuario.
- */
 function RetornoWebpay() {
   const navigate = useNavigate();
-  const [estado, setEstado] = useState("cargando"); // cargando | aprobado | rechazado | abortado
+
+const estado = useMemo(() => {
+  const params = new URLSearchParams(window.location.search);
+  const tbkToken = params.get("TBK_TOKEN");
+  const tokenWs = params.get("token_ws");
+  const status = params.get("status");
+  const error = params.get("error");
+
+  if (tbkToken && !tokenWs) return "abortado";
+  if (error || status === "rechazado") return "rechazado";
+  if (status === "aprobado" || tokenWs) return "aprobado";
+  return "cargando";
+}, [])
 
   useEffect(() => {
-    // El backend procesa el pago y Transbank redirige aquí con parámetros
-    // En producción, el backend redirige al frontend con el resultado.
-    // Por ahora leemos el resultado del sessionStorage si lo guardamos,
-    // o simplemente mostramos éxito si llegamos aquí sin TBK_TOKEN (abortado).
-    const params = new URLSearchParams(window.location.search);
-    const tbkToken = params.get("TBK_TOKEN");
-    const tokenWs = params.get("token_ws");
-    const status = params.get("status");
-    const error = params.get("error");
-
-    if (tbkToken && !tokenWs) {
-      setEstado("abortado");
-    } else if (error) {
-      setEstado("rechazado");
-    } else if (status === "rechazado") {
-      setEstado("rechazado");
-    } else if (status === "aprobado" || tokenWs) {
-      setEstado("aprobado");
-    } else {
+    if (estado === "cargando") {
       navigate("/panel/reservas");
     }
-  }, [navigate]);
+  }, [estado, navigate]);
 
   const handleVolver = () => navigate("/panel/reservas");
 
@@ -52,7 +40,6 @@ function RetornoWebpay() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center animate-in fade-in zoom-in-95 duration-500">
-
         {estado === "aprobado" ? (
           <>
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -78,7 +65,6 @@ function RetornoWebpay() {
             </p>
           </>
         )}
-
         <button
           onClick={handleVolver}
           className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98]"

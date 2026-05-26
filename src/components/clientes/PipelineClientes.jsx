@@ -159,7 +159,7 @@ const NombreModal = ({ visible, titulo, valorInicial, onConfirm, onCancel }) => 
 };
 
 const PipelineHeader = ({ totalLeads, totalValorGlobal, columnas }) => (
-  <div className="space-y-4 mb-5 font-sans">
+  <div className="space-y-4 mb-5 font-sans px-2 pt-5">
     <section>
       <h1 className="text-2xl font-bold text-slate-900">Pipeline de Ventas</h1>
       <p className="mt-1 text-sm text-slate-600">

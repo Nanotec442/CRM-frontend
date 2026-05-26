@@ -205,7 +205,7 @@ function Clientes() {
         )
       );
       toast.success(`Cliente ${nuevoEstado === "Activo" ? "activado" : "desactivado"} correctamente.`);
-    } catch (err) {
+    } catch {
       toast.error("No se pudo cambiar el estado del cliente.");
     }
   };

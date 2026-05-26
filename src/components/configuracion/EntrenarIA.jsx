@@ -85,7 +85,7 @@ export default function EntrenarIA() {
     // Validación básica de URL
     try {
       new URL(urlInput);
-    } catch (_) {
+    } catch {
       setUrlFeedback({ type: "error", message: "Por favor, ingresa una URL válida que empiece con http:// o https://" });
       return;
     }
@@ -143,7 +143,7 @@ export default function EntrenarIA() {
         <div>
           <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">1. Subir Documento</h3>
           <div 
-            className={`relative group border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[220px]
+            className={`relative group border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-55
               ${dragActive ? 'border-indigo-500 bg-indigo-50/70 scale-[1.01]' : 'border-slate-200 bg-slate-50 hover:bg-slate-50/50 hover:border-indigo-300'}
               ${isProcessingFile ? 'opacity-70 pointer-events-none blur-[1px]' : ''}`}
             onDragEnter={handleDrag}
@@ -204,9 +204,9 @@ export default function EntrenarIA() {
         {/* DIVISOR                                            */}
         {/* ================================================== */}
         <div className="relative flex items-center">
-          <div className="flex-grow border-t border-slate-200"></div>
-          <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">O utiliza un enlace</span>
-          <div className="flex-grow border-t border-slate-200"></div>
+          <div className="grow border-t border-slate-200"></div>
+          <span className="shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">O utiliza un enlace</span>
+          <div className="grow border-t border-slate-200"></div>
         </div>
 
         {/* ================================================== */}
@@ -215,7 +215,7 @@ export default function EntrenarIA() {
         <div>
           <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">2. Entrenar con Sitio Web</h3>
           <form onSubmit={entrenarModeloUrl} className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-grow">
+            <div className="relative grow">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <LinkIcon size={18} className="text-slate-400" />
               </div>

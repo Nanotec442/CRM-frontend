@@ -4,11 +4,12 @@ import { jwtDecode } from "jwt-decode";
 import {
   ArrowLeft, User, Mail, Phone, Building2, Fingerprint,
   Edit2, Archive, Loader2, Calendar, KanbanSquare,
-  FileText, Download, Clock, CheckCircle, XCircle
+  FileText, CheckCircle, XCircle, Clock, MessageSquare
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { clientesService } from "../../services/clientesService";
 import { documentosService } from "../../services/documentosService";
+import conversacionesService from "../../services/conversacionesService";
 import ClienteForm from "../../components/clientes/ClienteForm";
 
 function ClienteDetalle() {
@@ -22,18 +23,9 @@ function ClienteDetalle() {
   const [archivando, setArchivando] = useState(false);
   const [documentos, setDocumentos] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
+  const [conversaciones, setConversaciones] = useState([]);
+  const [loadingConv, setLoadingConv] = useState(false);
 
-  // Verificar si el usuario es superadmin desde el JWT
-  const esSuperAdmin = (() => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return false;
-      const payload = jwtDecode(token);
-      return payload.is_superadmin === true;
-    } catch {
-      return false;
-    }
-  })();
 
   const puedeAdministrar = (() => {
     try {
@@ -69,9 +61,22 @@ function ClienteDetalle() {
     }
   };
 
+  const cargarConversaciones = async () => {
+    try {
+      setLoadingConv(true);
+      const data = await conversacionesService.listarPorCliente(id);
+      setConversaciones(Array.isArray(data) ? data : []);
+    } catch {
+      setConversaciones([]);
+    } finally {
+      setLoadingConv(false);
+    }
+  };
+
   useEffect(() => {
     cargarCliente();
     cargarDocumentos();
+    cargarConversaciones();
   }, [id]);
 
   const handleGuardar = async (formData) => {
@@ -87,20 +92,15 @@ function ClienteDetalle() {
 
   const handleArchivar = async () => {
     const estaInactivo = cliente?.estado?.toLowerCase() === "inactivo";
-    const accion = estaInactivo ? "reactivar" : "archivar";
     const nuevoEstado = estaInactivo ? "Activo" : "Inactivo";
-
-    if (!window.confirm(
-      `¿${accion === "archivar" ? "Archivar" : "Reactivar"} a ${cliente?.nombre_completo}?`
-    )) return;
-
+    if (!window.confirm(`¿${estaInactivo ? "Reactivar" : "Archivar"} a ${cliente?.nombre_completo}?`)) return;
     setArchivando(true);
     try {
       await clientesService.modificar(id, { estado: nuevoEstado });
       setCliente((prev) => ({ ...prev, estado: nuevoEstado }));
       toast.success(`Cliente ${nuevoEstado === "Activo" ? "reactivado" : "archivado"} correctamente.`);
     } catch (err) {
-      toast.error(err.response?.data?.detail || `No se pudo ${accion} el cliente.`);
+      toast.error(err.response?.data?.detail || "No se pudo cambiar el estado.");
     } finally {
       setArchivando(false);
     }
@@ -108,11 +108,7 @@ function ClienteDetalle() {
 
   const formatearFecha = (fecha) => {
     if (!fecha) return "—";
-    return new Date(fecha).toLocaleDateString("es-CL", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+    return new Date(fecha).toLocaleDateString("es-CL", { day: "2-digit", month: "long", year: "numeric" });
   };
 
   if (loading) {
@@ -127,10 +123,7 @@ function ClienteDetalle() {
     return (
       <div className="max-w-2xl mx-auto py-10 text-center">
         <p className="text-slate-500 font-medium mb-4">{error}</p>
-        <button
-          onClick={() => navigate("/panel/clientes")}
-          className="text-sm font-semibold text-indigo-600 hover:underline"
-        >
+        <button onClick={() => navigate("/panel/clientes")} className="text-sm font-semibold text-indigo-600 hover:underline">
           Volver a Clientes
         </button>
       </div>
@@ -140,7 +133,6 @@ function ClienteDetalle() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 font-sans pb-10">
 
-      {/* Botón volver */}
       <button
         onClick={() => navigate("/panel/clientes")}
         className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm"
@@ -153,23 +145,14 @@ function ClienteDetalle() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-800 text-white text-lg font-bold flex items-center justify-center shrink-0 shadow-sm">
-            {(cliente?.nombre_completo ?? "?")
-              .split(" ")
-              .slice(0, 2)
-              .map((n) => n[0]?.toUpperCase() ?? "")
-              .join("")}
+            {(cliente?.nombre_completo ?? "?").split(" ").slice(0, 2).map((n) => n[0]?.toUpperCase() ?? "").join("")}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              {cliente?.nombre_completo}
-            </h1>
-            <p className="text-sm text-slate-500 font-medium mt-0.5">
-              Cliente desde {formatearFecha(cliente?.fecha_creacion)}
-            </p>
+            <h1 className="text-2xl font-bold text-slate-900">{cliente?.nombre_completo}</h1>
+            <p className="text-sm text-slate-500 font-medium mt-0.5">Cliente desde {formatearFecha(cliente?.fecha_creacion)}</p>
           </div>
         </div>
 
-        {/* Acciones */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setEditando(!editando)}
@@ -183,18 +166,14 @@ function ClienteDetalle() {
             <button
               onClick={handleArchivar}
               disabled={archivando}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border transition-colors disabled:opacity-70 ${cliente?.estado?.toLowerCase() === "inactivo"
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border transition-colors disabled:opacity-70 ${
+                cliente?.estado?.toLowerCase() === "inactivo"
                   ? "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
                   : "text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100"
-                }`}
+              }`}
             >
-              {archivando ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : cliente?.estado?.toLowerCase() === "inactivo" ? (
-                <CheckCircle size={15} />
-              ) : (
-                <Archive size={15} />
-              )}
+              {archivando ? <Loader2 size={15} className="animate-spin" /> :
+               cliente?.estado?.toLowerCase() === "inactivo" ? <CheckCircle size={15} /> : <Archive size={15} />}
               {cliente?.estado?.toLowerCase() === "inactivo" ? "Reactivar" : "Archivar"}
             </button>
           )}
@@ -203,10 +182,8 @@ function ClienteDetalle() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Columna izquierda — Datos del cliente */}
+        {/* Columna izquierda */}
         <div className="lg:col-span-1 space-y-4">
-
-          {/* Formulario de edición o tarjeta de datos */}
           {editando ? (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-base font-bold text-slate-900 mb-4">Editar Cliente</h2>
@@ -228,22 +205,20 @@ function ClienteDetalle() {
                 <h2 className="text-sm font-bold text-slate-700">Información de Contacto</h2>
               </div>
               <div className="p-6 space-y-4">
-
                 <InfoRow icon={<Mail size={16} />} label="Email" value={cliente?.email} />
                 <InfoRow icon={<Phone size={16} />} label="Teléfono" value={cliente?.telefono} />
                 <InfoRow icon={<Building2 size={16} />} label="Empresa" value={cliente?.empresa} />
                 <InfoRow icon={<Fingerprint size={16} />} label="RUT" value={cliente?.rut_documento} />
                 <InfoRow icon={<User size={16} />} label="Origen" value={cliente?.origen} />
-
-                {/* Estado */}
                 <div className="pt-2 border-t border-slate-100">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Estado</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${cliente?.estado?.toLowerCase() === "activo"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : cliente?.estado?.toLowerCase() === "inactivo"
-                      ? "bg-slate-100 text-slate-600 border-slate-200"
-                      : "bg-indigo-50 text-indigo-700 border-indigo-200"
-                    }`}>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${
+                    cliente?.estado?.toLowerCase() === "activo"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : cliente?.estado?.toLowerCase() === "inactivo"
+                        ? "bg-slate-100 text-slate-600 border-slate-200"
+                        : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                  }`}>
                     {cliente?.estado ?? "Nuevo"}
                   </span>
                 </div>
@@ -252,10 +227,10 @@ function ClienteDetalle() {
           )}
         </div>
 
-        {/* Columna derecha — Tarjetas del pipeline */}
+        {/* Columna derecha */}
         <div className="lg:col-span-2 space-y-4">
 
-          {/* Tarjetas en el pipeline */}
+          {/* Pipeline */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
               <KanbanSquare size={16} className="text-indigo-600" />
@@ -263,25 +238,18 @@ function ClienteDetalle() {
                 Oportunidades en Pipeline ({cliente?.tarjetas?.length ?? 0})
               </h2>
             </div>
-
             {!cliente?.tarjetas?.length ? (
               <div className="px-6 py-10 text-center">
                 <KanbanSquare size={32} className="mx-auto text-slate-200 mb-3" />
-                <p className="text-sm text-slate-500 font-medium">
-                  Sin oportunidades en el pipeline.
-                </p>
+                <p className="text-sm text-slate-500 font-medium">Sin oportunidades en el pipeline.</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-50">
                 {cliente.tarjetas.map((tarjeta) => (
                   <div key={tarjeta.id} className="px-6 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">
-                        {tarjeta.posicion_tablero ?? "Sin etapa"}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Actualizado {formatearFecha(tarjeta.fecha_actualizacion)}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-800">{tarjeta.posicion_tablero ?? "Sin etapa"}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Actualizado {formatearFecha(tarjeta.fecha_actualizacion)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {tarjeta.valor_estimado > 0 && (
@@ -289,10 +257,9 @@ function ClienteDetalle() {
                           ${Number(tarjeta.valor_estimado).toLocaleString("es-CL")}
                         </span>
                       )}
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${tarjeta.activa
-                        ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
-                        }`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
+                        tarjeta.activa ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-slate-100 text-slate-500 border-slate-200"
+                      }`}>
                         {tarjeta.activa ? "Activa" : "Archivada"}
                       </span>
                     </div>
@@ -302,7 +269,73 @@ function ClienteDetalle() {
             )}
           </div>
 
-          {/* Fecha de creación */}
+          {/* Historial de conversaciones — NUEVO */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+              <MessageSquare size={16} className="text-indigo-600" />
+              <h2 className="text-sm font-bold text-slate-700">
+                Conversaciones ({conversaciones.length})
+              </h2>
+            </div>
+            {loadingConv ? (
+              <div className="py-8 text-center">
+                <Loader2 size={20} className="animate-spin mx-auto text-slate-400" />
+              </div>
+            ) : conversaciones.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <MessageSquare size={28} className="mx-auto text-slate-200 mb-2" />
+                <p className="text-sm text-slate-400">Sin conversaciones registradas.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-50">
+                {conversaciones.map((conv) => {
+                  const estadoCls = {
+                    Activa: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                    Abierta: "bg-blue-50 text-blue-700 border-blue-200",
+                    Cerrada: "bg-slate-100 text-slate-500 border-slate-200",
+                  }[conv.estado] ?? "bg-slate-100 text-slate-500 border-slate-200";
+
+                  return (
+                    <div key={conv.id} className="px-6 py-3 flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-slate-700 capitalize">
+                            {conv.canal ?? "WhatsApp"}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${estadoCls}`}>
+                            {conv.estado}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            conv.modo_atencion === "ia"
+                              ? "bg-indigo-100 text-indigo-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}>
+                            {conv.modo_atencion === "ia" ? "IA" : "Humano"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {conv.ultima_interaccion_at
+                            ? new Date(conv.ultima_interaccion_at).toLocaleDateString("es-CL", {
+                                day: "2-digit", month: "short", year: "numeric",
+                                hour: "2-digit", minute: "2-digit"
+                              })
+                            : "—"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => navigate("/panel/inbox")}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline shrink-0"
+                      >
+                        Ver en Inbox
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Actividad */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
               <Calendar size={16} className="text-slate-500" />
@@ -315,15 +348,13 @@ function ClienteDetalle() {
               </div>
             </div>
           </div>
-
         </div>
-        {/* Documentos del cliente */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+        {/* Documentos */}
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
             <FileText size={16} className="text-indigo-600" />
-            <h2 className="text-sm font-bold text-slate-700">
-              Documentos ({documentos.length})
-            </h2>
+            <h2 className="text-sm font-bold text-slate-700">Documentos ({documentos.length})</h2>
           </div>
           {loadingDocs ? (
             <div className="py-8 text-center">
@@ -341,33 +372,26 @@ function ClienteDetalle() {
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{doc.tipo_documento}</p>
                     <p className="text-xs text-slate-400">
-                      {doc.fecha_generacion
-                        ? new Date(doc.fecha_generacion).toLocaleDateString("es-CL")
-                        : "—"}
+                      {doc.fecha_generacion ? new Date(doc.fecha_generacion).toLocaleDateString("es-CL") : "—"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${doc.estado_firma === "Firmado"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : doc.estado_firma === "Anulado"
-                        ? "bg-red-50 text-red-700 border-red-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}>
-                      {doc.estado_firma ?? "Pendiente"}
-                    </span>
-                  </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                    doc.estado_firma === "Firmado" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : doc.estado_firma === "Anulado" ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
+                  }`}>
+                    {doc.estado_firma ?? "Pendiente"}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
 }
 
-// Componente auxiliar para filas de info
 function InfoRow({ icon, label, value }) {
   return (
     <div className="flex items-start gap-3">

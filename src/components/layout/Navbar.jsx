@@ -1,50 +1,90 @@
 import { Link } from "react-router-dom";
-import { Hexagon } from "lucide-react"; // Ícono para darle un toque corporativo al logo
+import logoPivot from "../../assets/pivot.png";
 
 function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md transition-all font-sans">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        
-        {/* --- LOGO --- */}
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 text-2xl font-bold text-slate-900 tracking-tight hover:opacity-80 transition-opacity"
-        >
-          <div className="bg-indigo-600 text-white p-1.5 rounded-lg shadow-sm">
-            <Hexagon size={20} fill="currentColor" strokeWidth={1} />
-          </div>
-          PIVOT <span className="text-indigo-600">360</span>
-        </Link>
+    <header
+      className="
+        sticky top-0 z-50
+        border-b border-white/30
+        bg-[#dfe6ee]/80
+        backdrop-blur-xl
+      "
+    >
+      <div className="mx-auto max-w-7xl px-6 py-5">
+        <div className="flex items-center justify-between">
 
-        {/* --- NAVEGACIÓN Y BOTONES --- */}
-        <nav className="flex items-center gap-5 sm:gap-6">
-          
+          {/* LOGO */}
           <Link
             to="/"
-            className="hidden sm:block text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-3 group"
           >
-            Inicio
+            <img
+              src={logoPivot}
+              alt="Pivot 360"
+              className="
+                h-16 w-auto object-contain
+                transition-transform duration-300
+                group-hover:scale-[1.02]
+              "
+            />
           </Link>
 
-          {/* Separador vertical sutil (solo en pantallas medianas o más grandes) */}
-          <div className="hidden sm:block h-4 w-px bg-slate-200"></div> 
+          {/* NAV */}
+          <nav className="flex items-center gap-3 sm:gap-5">
 
-          <Link
-            to="/login"
-            className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors"
-          >
-            Iniciar sesión
-          </Link>
+            <Link
+              to="/"
+              className="
+                hidden md:block
+                text-sm
+                font-semibold
+                tracking-[0.2em]
+                uppercase
+                text-[#416ee5]
+                hover:opacity-70
+                transition
+              "
+            >
+              Inicio
+            </Link>
 
-          <Link
-            to="/register"
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-slate-200 hover:bg-slate-800 transition-all active:scale-[0.98]"
-          >
-            Comenzar gratis
-          </Link>
-          
-        </nav>
+            <Link
+              to="/login"
+              className="
+                rounded-xl
+                px-4 py-2.5
+                text-sm
+                font-semibold
+                text-[#416ee5]
+                hover:bg-white/50
+                transition-all
+              "
+            >
+              Iniciar sesión
+            </Link>
+
+            <Link
+              to="/register"
+              className="
+                rounded-xl
+                bg-[#416ee5]
+                px-5 py-2.5
+                text-sm
+                font-semibold
+                text-white
+                shadow-lg shadow-blue-500/20
+                hover:bg-[#3158c9]
+                hover:shadow-blue-500/30
+                transition-all
+                active:scale-[0.98]
+              "
+            >
+              Empezar
+            </Link>
+
+          </nav>
+        </div>
       </div>
     </header>
   );

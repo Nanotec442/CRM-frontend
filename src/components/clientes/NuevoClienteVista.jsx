@@ -128,7 +128,7 @@ function NuevoClienteVista({ onGuardar, onVolver }) {
             </p>
 
             <div
-              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-[180px]
+              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-45
                 ${dragActive ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'}
                 ${isProcessing ? 'opacity-70 pointer-events-none' : ''}`}
               onDragEnter={handleDrag}

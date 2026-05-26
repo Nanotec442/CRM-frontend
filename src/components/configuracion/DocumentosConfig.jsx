@@ -106,7 +106,7 @@ const DocumentosConfig = ({ onAIComplete }) => {
 
       {/* Zona Drag & Drop */}
       <div 
-        className={`relative group border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-[200px]
+        className={`relative group border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 flex flex-col items-center justify-center min-h-50
           ${dragActive ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300'}
           ${isProcessing ? 'opacity-70 pointer-events-none' : ''}`}
         onDragEnter={handleDrag}

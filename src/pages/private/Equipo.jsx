@@ -60,7 +60,16 @@ function Equipo() {
     setCargandoRoles(true);
     try {
       const data = await rolesService.listar();
-      setRoles(Array.isArray(data) ? data : []);
+      const lista = Array.isArray(data) ? data : [];
+      setRoles(lista);
+
+      // Preseleccionar rol Empleado si existe, si no el primero no administrador
+      const empleado = lista.find((r) => r.nombre.toLowerCase() === "empleado");
+      const noAdmin = lista.find((r) => r.nombre.toLowerCase() !== "administrador");
+      const preseleccion = empleado ?? noAdmin;
+      if (preseleccion) {
+        setFormData((prev) => ({ ...prev, role_id: preseleccion.id }));
+      }
     } catch {
       toast.error("No se pudieron cargar los roles disponibles.");
     } finally {
@@ -350,17 +359,16 @@ function Equipo() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
-                        {miembro.is_superadmin 
-                        ? "Propietario" 
-                        : roles.find((r) => r.id === miembro.role_id)?.nombre ?? "Sin rol"}
+                        {miembro.is_superadmin
+                          ? "Propietario"
+                          : roles.find((r) => r.id === miembro.role_id)?.nombre ?? "Sin rol"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                        miembro.estado === "Activo"
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${miembro.estado === "Activo"
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-slate-100 text-slate-500"
-                      }`}>
+                        }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${miembro.estado === "Activo" ? "bg-emerald-500" : "bg-slate-400"}`} />
                         {miembro.estado || "Activo"}
                       </span>

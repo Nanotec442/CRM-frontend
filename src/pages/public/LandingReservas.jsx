@@ -38,9 +38,6 @@ function isPast(date) {
   return date < hoy;
 }
 
-function formatHora(date) {
-  return new Date(date).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", hour12: false });
-}
 
 function formatMonto(monto) {
   if (!monto || Number(monto) === 0) return "Gratis";

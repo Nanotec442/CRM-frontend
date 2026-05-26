@@ -12,7 +12,6 @@ export default function ReservasOnlineConfig() {
   const [slugActual, setSlugActual] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [copiado, setCopiadoLink] = useState(false);
-  const [copiadoQR, setCopiadoQR] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const tenantId = localStorage.getItem("tenant_id");
