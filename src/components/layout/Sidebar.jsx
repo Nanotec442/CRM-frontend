@@ -164,8 +164,7 @@ function Sidebar({ isOpen, onClose }) {
                   end={item.to === "/panel"}
                   onClick={handleNavClick}
                   className={({ isActive }) =>
-                    `${linkBase} ${
-                      isActive ? linkActive : linkInactive
+                    `${linkBase} ${isActive ? linkActive : linkInactive
                     }`
                   }
                 >
@@ -184,8 +183,7 @@ function Sidebar({ isOpen, onClose }) {
                 to="/panel/equipo"
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `${linkBase} ${
-                    isActive ? linkActive : linkInactive
+                  `${linkBase} ${isActive ? linkActive : linkInactive
                   }`
                 }
               >
@@ -194,7 +192,7 @@ function Sidebar({ isOpen, onClose }) {
                   className="transition-transform group-hover:scale-110"
                 />
 
-                <span>Equipo</span>
+                <span>Gestión de equipo y sucursales</span>
               </NavLink>
             )}
           </nav>

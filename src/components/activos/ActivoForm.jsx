@@ -106,7 +106,7 @@ const ActivoForm = ({ onSubmit }) => {
         </div>
 
         <div>
-          <label className={labelClasses}>Buffer limpieza (min)</label>
+          <label className={labelClasses}>Disp. en min</label>
           <input
             name="buffer_limpieza_minutos"
             type="number"

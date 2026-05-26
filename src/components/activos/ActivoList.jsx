@@ -95,7 +95,7 @@ const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
               </div>
 
               <div className="flex justify-between items-end pb-1">
-                <span className={labelStyle}>Buffer limpieza</span>
+                <span className={labelStyle}>Disponibilidad del producto (min)</span>
                 <span className={valueStyle}>{a.buffer_limpieza_minutos || 0} min</span>
               </div>
             </div>

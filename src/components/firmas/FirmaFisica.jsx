@@ -42,7 +42,6 @@ export default function FirmaFisica({ onGuardar, onCancelar }) {
         return;
       }
       
-      // Truco: Creamos un Canvas invisible para convertir el texto en imagen
       const canvas = document.createElement('canvas');
       canvas.width = 500;
       canvas.height = 200;

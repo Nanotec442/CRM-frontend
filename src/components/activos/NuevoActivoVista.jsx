@@ -282,7 +282,7 @@ function NuevoActivoVista({ onGuardar, onVolver }) {
 
                 {/* Buffer */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Buffer limpieza (min)</label>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Disponibilidad del producto (min)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-slate-300 font-bold text-sm">⏱</span>
                     <input
