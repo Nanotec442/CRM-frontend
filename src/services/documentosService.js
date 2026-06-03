@@ -43,10 +43,29 @@ export const documentosService = {
     return res.data;
   },
 
-  async anular(documentoId) {
-    const res = await api.patch(`/documentos/${documentoId}/anular`);
+  async anular(documentoId, motivo) {
+    const res = await api.patch(`/documentos/${documentoId}/anular`, { motivo });
     return res.data;
   },
+
+  async enviarParaFirma(documentoId) {
+  const res = await api.post(`/documentos/${documentoId}/enviar-firma`);
+  return res.data;
+},
+
+async obtenerDocumentoPublico(token) {
+  const res = await api.get(`/documentos/firma-publica/${token}`, {
+    responseType: "blob",
+  });
+  return res.data;
+},
+
+async firmarDocumentoPublico(token, payload) {
+  const res = await api.post(`/documentos/firma-publica/${token}`, payload);
+  return res.data;
+  },
 };
+
+
 
 export default documentosService;

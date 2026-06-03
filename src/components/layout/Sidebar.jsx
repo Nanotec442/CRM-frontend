@@ -144,7 +144,7 @@ function Sidebar({ isOpen, onClose }) {
             className="h-20 w-auto object-contain drop-shadow-sm"
           />
 
-          <div className="mt-4 h-px w-16 bg-gradient-to-r from-transparent via-[#416ee5] to-transparent" />
+          <div className="mt-4 h-px w-16 bg-linear-to-r from-transparent via-[#416ee5] to-transparent" />
         </div>
 
         {/* Navegación */}

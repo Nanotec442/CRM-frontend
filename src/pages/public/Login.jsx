@@ -7,6 +7,7 @@ import { login } from "../../services/authService";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleLogin from "./GoogleLogin";
+import FacebookLogin from "./FacebookLogin";
 
 function Login() {
   const navigate = useNavigate();
@@ -88,6 +89,14 @@ function Login() {
     }
   };
 
+  // 5. Callback para el Login de Facebook
+  const handleFacebookLoginSuccess = () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      procesarLoginExitoso(token);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Navbar />
@@ -109,6 +118,11 @@ function Login() {
           <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <GoogleLogin onLoginSuccess={handleGoogleLoginSuccess} />
           </GoogleOAuthProvider>
+
+          {/* --- ZONA FACEBOOK LOGIN --- */}
+          <div className="mt-3">
+            <FacebookLogin onLoginSuccess={handleFacebookLoginSuccess} />
+          </div>
 
           {/* --- SEPARADOR VISUAL --- */}
           <div className="relative flex items-center my-6">

@@ -23,7 +23,7 @@ function Navbar() {
               src={logoPivot}
               alt="Pivot 360"
               className="
-                h-16 w-auto object-contain
+                h-22 w-auto object-contain
                 transition-transform duration-300
                 group-hover:scale-[1.02]
               "

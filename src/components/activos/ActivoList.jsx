@@ -25,12 +25,13 @@ const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
   const labelStyle = "text-[10px] uppercase font-bold text-slate-400 tracking-wider";
   const valueStyle = "text-sm font-semibold text-slate-700";
 
-  // Normaliza estado — descarta "Inactivo" y "Operativo" legados
+  // Normaliza valores legacy del backend ("Operativo", "Activo") a "Disponible"
   const normalizarEstado = (estado) => {
     const e = estado?.toLowerCase();
-    if (e === "operativo" || e === "activo" || e === "disponible") return "Disponible";
+    if (e === "operativo" || e === "activo") return "Disponible";
     if (e === "mantenimiento") return "Mantenimiento";
     if (e === "fuera de servicio" || e === "fuera_servicio") return "Fuera de servicio";
+    if (e === "inactivo") return "Inactivo";
     return "Disponible";
   };
 
@@ -84,18 +85,25 @@ const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
 
               <div className="flex justify-between items-end border-b border-slate-50 pb-2">
                 <span className={labelStyle}>Tipo</span>
-                <span className={valueStyle}>{a.tipo}</span>
+                <span className={valueStyle}>{a.tipo || "—"}</span>
               </div>
+
+              {a.descripcion && (
+                <div className="border-b border-slate-50 pb-2">
+                  <span className={labelStyle}>Descripción</span>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">{a.descripcion}</p>
+                </div>
+              )}
 
               <div className="flex justify-between items-end border-b border-slate-50 pb-2">
                 <span className={labelStyle}>Precio Base</span>
                 <span className={`${valueStyle} text-emerald-600`}>
-                  ${a.precio_base?.toLocaleString("es-CL")}
+                  {a.precio_base != null ? `$${Number(a.precio_base).toLocaleString("es-CL")}` : "—"}
                 </span>
               </div>
 
               <div className="flex justify-between items-end pb-1">
-                <span className={labelStyle}>Disponibilidad del producto (min)</span>
+                <span className={labelStyle}>Buffer (min)</span>
                 <span className={valueStyle}>{a.buffer_limpieza_minutos || 0} min</span>
               </div>
             </div>

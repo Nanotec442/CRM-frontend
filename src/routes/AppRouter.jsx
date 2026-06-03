@@ -1,22 +1,23 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "../components/layout/PublicLayout";
 import MainLayout from "../components/layout/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
 // Páginas públicas
-import Home from "../pages/public/Home";
 import Login from "../pages/public/Login";
 import Register from "../pages/public/Register";
 import ForgotPassword from "../pages/public/ForgotPassword";
 import ResetPassword from "../pages/public/ResetPassword";
 import RetornoWebpay from "../pages/public/RetornoWebpay";
 import LandingReservas from "../pages/public/LandingReservas";
+import FirmaPublica from "../pages/public/FirmaPublica";
+
 
 // Panel Superadmin
-import SuperAdminLayout from "../pages/superadmin/SuperAdminLayout";
-import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard";
-import EmpresasList from "../pages/superadmin/EmpresasList";
-import EmpresaDetalle from "../pages/superadmin/EmpresaDetalle";
+import SuperAdminLayout from "../pages/superAdmin/SuperAdminLayout";
+import SuperAdminDashboard from "../pages/superAdmin/SuperAdminDashboard";
+import EmpresasList from "../pages/superAdmin/EmpresasList";
+import EmpresaDetalle from "../pages/superAdmin/EmpresaDetalle";
 
 // Páginas privadas
 import Dashboard from "../pages/private/Dashboard";
@@ -36,10 +37,10 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* ── Rutas Públicas ── */}
         <Route path="/" element={<PublicLayout />}>
-          <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
@@ -47,6 +48,8 @@ function AppRouter() {
           <Route path="retorno-pago" element={<RetornoWebpay />} />
           <Route path="reservar/:tenantId" element={<LandingReservas />} />
           <Route path="completar-registro" element={<CompletarRegistro />} />
+          <Route path="/firma/:token" element={<FirmaPublica />} />
+
         </Route>
 
         {/* ── Panel Superadmin ── */}

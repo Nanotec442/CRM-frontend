@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Trash2, Star, Wifi } from "lucide-react";
 import { toast } from "react-toastify";
-import api from "../../services/api";
+import whatsappService from "../../services/whatsappService";
 
 const META_APP_ID = import.meta.env.VITE_META_APP_ID;
 const META_CONFIG_ID = import.meta.env.VITE_META_CONFIG_ID;
@@ -56,8 +56,8 @@ export default function WhatsAppConfig() {
   const cargarConexiones = async () => {
     setCargando(true);
     try {
-      const res = await api.get("/crm/whatsapp/connections");
-      setConexiones(Array.isArray(res.data) ? res.data : []);
+      const data = await whatsappService.listarConexiones();
+      setConexiones(data);
     } catch (err) {
       if (err.response?.status !== 404) {
         toast.error("No se pudieron cargar las conexiones de WhatsApp.");
@@ -71,9 +71,7 @@ export default function WhatsAppConfig() {
   // Función async separada para intercambiar el code con el backend
   const intercambiarCodigo = async (code) => {
     try {
-      const { data } = await api.post("/crm/whatsapp/embedded-signup/exchange", {
-        code,
-      });
+      const data = await whatsappService.exchangeCode(code);
       const numero =
         data?.integration?.display_phone_number ||
         data?.integration?.phone_number_id;
@@ -128,9 +126,7 @@ export default function WhatsAppConfig() {
 
   const marcarPrincipal = async (integrationId) => {
     try {
-      await api.patch("/crm/whatsapp/connections/principal", {
-        integration_id: integrationId,
-      });
+      await whatsappService.marcarPrincipal(integrationId);
       toast.success("Número marcado como principal.");
       await cargarConexiones();
     } catch {
@@ -147,7 +143,7 @@ export default function WhatsAppConfig() {
       return;
 
     try {
-      await api.delete(`/crm/whatsapp/connections/${integrationId}`);
+      await whatsappService.desconectar(integrationId);
       toast.success("Número desconectado.");
       await cargarConexiones();
     } catch {
@@ -157,10 +153,8 @@ export default function WhatsAppConfig() {
 
   const probarConexion = async (integrationId) => {
     try {
-      const res = await api.get(
-        `/crm/whatsapp/connections/${integrationId}/test`
-      );
-      if (res.data?.is_valid) {
+      const data = await whatsappService.probarConexion(integrationId);
+      if (data?.is_valid) {
         toast.success("Conexión activa y válida ✓");
       } else {
         toast.warning("La conexión existe pero el token puede haber expirado.");

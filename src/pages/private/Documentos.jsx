@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
 import {
   FileText, Search, Clock, CheckCircle, XCircle,
-  Download, Eye, FileSignature, Ban, Loader2, Users, ShieldCheck
+  Download, Eye, FileSignature, Ban, Loader2, Users
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { documentosService } from "../../services/documentosService";
 import { clientesService } from "../../services/clientesService";
-import FirmaFisica from "../../components/firmas/FirmaFisica";
 
 function Documentos() {
   const [clientes, setClientes] = useState([]);
@@ -17,14 +15,6 @@ function Documentos() {
   const [loading, setLoading] = useState(false);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [busqueda, setBusqueda] = useState("");
-
-  // Estado de firma — incluye google_access_token
-  const [firmaState, setFirmaState] = useState({
-    isOpen: false,
-    documentoId: null,
-    googleToken: null,      // 👈 token verificado por Google
-    verificando: false,     // 👈 esperando respuesta de Google
-  });
 
   useEffect(() => {
     clientesService.listar()
@@ -52,53 +42,12 @@ function Documentos() {
     cargarDocumentos(cliente.id ?? cliente.cliente_id);
   };
 
-  // ── Login Google para verificar identidad antes de firmar ─────────────
-  const loginGoogle = useGoogleLogin({
-    flow: "implicit",
-    onSuccess: (tokenResponse) => {
-      // Google verificó la identidad — guardamos el token y abrimos el canvas
-      setFirmaState((prev) => ({
-        ...prev,
-        googleToken: tokenResponse.access_token,
-        verificando: false,
-        isOpen: true,
-      }));
-      toast.success("Identidad verificada con Google. Ahora puedes firmar.");
-    },
-    onError: () => {
-      setFirmaState((prev) => ({ ...prev, verificando: false }));
-      toast.error("No se pudo verificar tu identidad con Google.");
-    },
-  });
-
-  const handleIniciarFirma = (documentoId) => {
-    // Paso 1: verificar identidad con Google antes de mostrar el canvas
-    setFirmaState({
-      isOpen: false,
-      documentoId,
-      googleToken: null,
-      verificando: true,
-    });
-    loginGoogle();
-  };
-
-  // ── Guardar firma — envía firma_base64 + google_access_token ──────────
-  const handleFirmarFisica = async (imagenBase64) => {
+  const handleEnviarFirma = async (documentoId) => {
     try {
-      await documentosService.firmarAlternativo(firmaState.documentoId, {
-        firma_base64: imagenBase64,
-        google_access_token: firmaState.googleToken,
-      });
-      toast.success("Documento firmado y verificado correctamente.");
-      setDocumentos((prev) =>
-        prev.map((d) =>
-          d.id === firmaState.documentoId ? { ...d, estado_firma: "Firmado" } : d
-        )
-      );
+      await documentosService.enviarParaFirma(documentoId);
+      toast.success("Correo de firma enviado al cliente.");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Error al firmar el documento.");
-    } finally {
-      setFirmaState({ isOpen: false, documentoId: null, googleToken: null, verificando: false });
+      toast.error(err.response?.data?.detail || "No se pudo enviar el correo.");
     }
   };
 
@@ -306,20 +255,15 @@ function Documentos() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
 
-                            {/* Firmar — ahora requiere verificación Google */}
+                            {/* Enviar link al cliente */}
                             {doc.estado_firma === "Pendiente" && (
                               <button
-                                title="Verificar identidad y firmar"
-                                onClick={() => handleIniciarFirma(doc.id)}
-                                disabled={firmaState.verificando}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors disabled:opacity-60"
+                                title="Enviar link de firma al cliente"
+                                onClick={() => handleEnviarFirma(doc.id)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors"
                               >
-                                {firmaState.verificando && firmaState.documentoId === doc.id ? (
-                                  <Loader2 size={13} className="animate-spin" />
-                                ) : (
-                                  <ShieldCheck size={13} />
-                                )}
-                                Firmar con Google
+                                <FileSignature size={13} />
+                                Enviar para firmar
                               </button>
                             )}
 
@@ -361,21 +305,6 @@ function Documentos() {
           </div>
         </div>
       </div>
-
-      {/* Modal firma física — solo aparece tras verificación Google exitosa */}
-      {firmaState.isOpen && firmaState.googleToken && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          {/* Banner de verificación */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg">
-            <ShieldCheck size={14} />
-            Identidad verificada con Google
-          </div>
-          <FirmaFisica
-            onGuardar={handleFirmarFisica}
-            onCancelar={() => setFirmaState({ isOpen: false, documentoId: null, googleToken: null, verificando: false })}
-          />
-        </div>
-      )}
     </div>
   );
 }

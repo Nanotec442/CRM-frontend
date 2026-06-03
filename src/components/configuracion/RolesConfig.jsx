@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { Shield, Pencil, Trash2, X, Check, Loader2, Plus } from "lucide-react";
+import { Shield, Pencil, Trash2, X, Check, Loader2, Plus, Lock } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import rolesService from "../../services/rolesService";
 
 // ── Permisos exactos definidos en el backend (PermisosTenant) ─────────────────
@@ -28,10 +29,10 @@ const GRUPOS_PERMISOS = [
   {
     grupo: "Activos",
     permisos: [
-      { id: "leer_activos",      label: "Ver Activos" },
-      { id: "crear_activo",      label: "Crear Activos" },
-      { id: "editar_activo",     label: "Editar Activos" },
-      { id: "desactivar_activo", label: "Desactivar Activos" },
+      { id: "leer_activos",    label: "Ver Activos" },
+      { id: "crear_activos",   label: "Crear Activos" },
+      { id: "editar_activos",  label: "Editar Activos" },
+      { id: "borrar_activos",  label: "Desactivar Activos" },
     ],
   },
   {
@@ -75,15 +76,23 @@ const RolesConfig = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [miRoleId, setMiRoleId] = useState(null);
 
-  // Formulario de creación
   const [nombreNuevo, setNombreNuevo] = useState("");
   const [permisosNuevo, setPermisosNuevo] = useState(new Set());
-
-  // Edición inline
-  const [editando, setEditando] = useState(null); // { id, nombre, permisos: Set }
+  const [editando, setEditando] = useState(null);
 
   useEffect(() => {
+    // Leer el role_id del usuario actual desde el JWT
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = jwtDecode(token);
+        setMiRoleId(payload.rol_id ?? null);
+      }
+    } catch {
+      // si el token está malformado no bloqueamos nada
+    }
     cargarRoles();
   }, []);
 
@@ -106,11 +115,17 @@ const RolesConfig = () => {
       toast.error("El nombre del rol es obligatorio.");
       return;
     }
+    const tenantId = localStorage.getItem("tenant_id");
+    if (!tenantId) {
+      toast.error("No se pudo identificar el tenant. Vuelve a iniciar sesión.");
+      return;
+    }
     setGuardando(true);
     try {
       const nuevo = await rolesService.crear({
         nombre: nombreNuevo.trim(),
         permisos: setAPermisos(permisosNuevo),
+        tenant_id: tenantId,
       });
       setRoles((prev) => [...prev, nuevo]);
       setNombreNuevo("");
@@ -349,7 +364,14 @@ const RolesConfig = () => {
                     // ── Fila normal ──
                     <tr key={rol.id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="px-5 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">
-                        {rol.nombre}
+                        <span className="flex items-center gap-2">
+                          {rol.nombre}
+                          {miRoleId === rol.id && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                              <Lock size={10} /> Tu rol
+                            </span>
+                          )}
+                        </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap gap-1.5">
@@ -372,22 +394,26 @@ const RolesConfig = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => iniciarEdicion(rol)}
-                            title="Editar rol"
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleEliminar(rol)}
-                            title="Eliminar rol"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        {miRoleId === rol.id ? (
+                          <span className="text-xs text-slate-400 italic pr-1">Protegido</span>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => iniciarEdicion(rol)}
+                              title="Editar rol"
+                              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEliminar(rol)}
+                              title="Eliminar rol"
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )

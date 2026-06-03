@@ -23,7 +23,12 @@ export const authService = {
   },
 
   async loginGoogle(token) {
-    const response = await api.post("/auth/google", {token});
+    const response = await api.post("/auth/google", { token });
+    return response.data;
+  },
+
+  async loginFacebook(accessToken) {
+    const response = await api.post("/auth/facebook", { token: accessToken });
     return response.data;
   },
 
