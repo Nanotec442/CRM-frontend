@@ -13,21 +13,26 @@ import DocumentosConfig from "../../components/configuracion/DocumentosConfig";
 import RolesConfig from "../../components/configuracion/RolesConfig";
 import ReservasOnlineConfig from "../../components/configuracion/ReservasOnlineConfig";
 import WhatsAppConfig from "../../components/configuracion/WhatsAppConfig";
+
 import authService from "../../services/authService";
 import empresasService from "../../services/empresasService";
 
 /**
  * Panel Central de Configuración.
- * Actúa como el orquestador principal (Smart Component) para las preferencias del usuario y el Tenant.
  */
 const Configuracion = () => {
   const { config, guardar } = useConfig();
 
-  const [form, setForm] = useState(config || {});
+  const [form, setForm] = useState({});
   const [active, setActive] = useState("perfil");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // 1. HIDRATACIÓN DUAL: JWT (Usuario) + API (Empresa)
+  useEffect(() => {
+    if (config) {
+      setForm((prev) => ({ ...config, ...prev }));
+    }
+  }, [config]);
+
   useEffect(() => {
     const inicializarDatos = async () => {
       try {
@@ -37,7 +42,6 @@ const Configuracion = () => {
         const payload = jwtDecode(token);
         const tenantId = payload.tenant_id || localStorage.getItem("tenant_id");
 
-        // JWT siempre tiene prioridad — nombre viene del token
         setForm((prev) => ({
           ...prev,
           nombre_completo: payload.nombre
@@ -67,12 +71,10 @@ const Configuracion = () => {
     inicializarDatos();
   }, []);
 
-  // 2. MANEJADOR UNIVERSAL DE INPUTS
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 3. PREPARACIÓN Y RUTEO ANTES DE GUARDAR
   const handleGuardar = async () => {
     setIsProcessing(true);
     const payload = { ...form };
@@ -96,13 +98,24 @@ const Configuracion = () => {
         toast.success("Perfil actualizado correctamente.");
       } else if (active === "empresa") {
         const payloadEmpresa = {
-          nombre_empresa: payload.nombre_empresa,
+          nombre: payload.nombre_empresa,
           rut_empresa: payload.rut_empresa,
           tipo_empresa: payload.tipo_empresa,
           direccion: payload.direccion,
         };
-        await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
+        const empresaActualizada = await empresasService.actualizarConfiguracionMiEmpresa(payloadEmpresa);
+
+        // Sincronizar el form con la respuesta real del backend
+        setForm((prev) => ({
+          ...prev,
+          nombre_empresa: empresaActualizada.nombre ?? prev.nombre_empresa,
+          rut_empresa: empresaActualizada.rut_empresa ?? prev.rut_empresa,
+          tipo_empresa: empresaActualizada.tipo_empresa ?? prev.tipo_empresa,
+          direccion: empresaActualizada.direccion ?? prev.direccion,
+        }));
+
         guardar(payload);
+        toast.success("Datos de la empresa actualizados correctamente.");
       } else {
         guardar(payload);
       }
@@ -114,7 +127,6 @@ const Configuracion = () => {
     }
   };
 
-  // 4. FLUJO DE INTELIGENCIA ARTIFICIAL
   const handleAIFill = (data) => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -124,7 +136,6 @@ const Configuracion = () => {
     }, 1500);
   };
 
-  // 5. RENDERIZADO CONDICIONAL DE PESTAÑAS
   const renderContent = () => {
     if (isProcessing) return <ProcessingLoader />;
 
@@ -150,7 +161,6 @@ const Configuracion = () => {
     }
   };
 
-  // Pestañas que manejan su propio guardado — ocultar el botón global
   const ocultarBotonGuardar = [
     "documentos",
     "seguridad",
@@ -159,10 +169,10 @@ const Configuracion = () => {
     "whatsapp",
   ].includes(active) || isProcessing;
 
+  if (!form) return <ProcessingLoader />;
+
   return (
     <div className="space-y-8 font-sans pb-10 animate-in fade-in duration-500">
-
-      {/* HEADER */}
       <section>
         <h1 className="text-3xl font-bold text-slate-900">
           Configuración del Sistema
@@ -173,22 +183,16 @@ const Configuracion = () => {
         </p>
       </section>
 
-      {/* LAYOUT PRINCIPAL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-
-        {/* Navegación Lateral */}
         <aside className="lg:col-span-3">
           <ConfigSidebar active={active} setActive={setActive} />
         </aside>
 
-        {/* Contenido Activo */}
         <main className="lg:col-span-9 space-y-6">
-
           <div className="rounded-3xl bg-white p-2 shadow-sm ring-1 ring-slate-200 min-h-112.5 transition-all duration-300">
             {renderContent()}
           </div>
 
-          {/* Botón de Guardar global */}
           {!ocultarBotonGuardar && (
             <div className="flex justify-end pt-2 animate-in fade-in duration-300">
               <button

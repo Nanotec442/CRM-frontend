@@ -15,7 +15,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-import logoPivot from "../../assets/pivot.png";
+import logoPivot from "../../assets/imgPivot.png";
 
 function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();

@@ -3,11 +3,14 @@ import {
   Search, Send, Bot, User, Phone, RefreshCw,
   MessageSquare, Loader2, UserCheck, UserPlus,
   CheckCircle, RotateCcw, ArrowLeft,
-  Users, Clock, TrendingUp, Activity
+  Users, Clock, TrendingUp,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import conversacionesService from "../../services/conversacionesService";
 import empresasService from "../../services/empresasService";
+
+const WS_BASE = import.meta.env.VITE_WS_URL || window.location.origin.replace(/^http/, "ws");
+const LISTA_POLL_MS = 30_000;
 
 function formatearHora(timestamp) {
   if (!timestamp) return "";
@@ -41,6 +44,14 @@ function getBadgeEstado(estado) {
     "Cerrada": { label: "Cerrada", cls: "bg-slate-100 text-slate-500" },
   };
   return map[estado] ?? { label: estado, cls: "bg-slate-100 text-slate-500" };
+}
+
+function nombreMostrable(conv) {
+  const nombre = conv.cliente?.nombre_completo;
+  const telefono = conv.cliente?.telefono;
+  if (nombre && nombre.trim()) return nombre.trim();
+  if (telefono && telefono.trim()) return telefono.trim();
+  return "Sin identificar";
 }
 
 // ── Tarjetas de métricas ──────────────────────────────────────────────────────
@@ -178,6 +189,69 @@ function ModalAsignar({ conversacionId, onAsignado, onCerrar }) {
   );
 }
 
+// ── Hook WebSocket ────────────────────────────────────────────────────────────
+function useInboxWebSocket({ tenantId, conversacionActualId, onNuevoMensaje, onActualizarLista }) {
+  const wsRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  const conectar = useCallback(() => {
+    if (!tenantId || !mountedRef.current) return;
+
+    const params = conversacionActualId ? `?conversacion_id=${conversacionActualId}` : "";
+    const url = `${WS_BASE}/api/crm/conversaciones/ws/${tenantId}${params}`;
+
+    const ws = new WebSocket(url);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      const keepalive = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) ws.send("ping");
+      }, 25_000);
+      ws._keepalive = keepalive;
+    };
+
+    ws.onmessage = (event) => {
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (data.tipo === "nuevo_mensaje") {
+        onNuevoMensaje(data);
+        onActualizarLista(data.conversacion_id);
+      }
+    };
+
+    ws.onclose = () => {
+      clearInterval(ws._keepalive);
+      if (mountedRef.current) {
+        reconnectTimerRef.current = setTimeout(conectar, 3_000);
+      }
+    };
+
+    ws.onerror = () => {
+      ws.close();
+    };
+  }, [tenantId, conversacionActualId, onNuevoMensaje, onActualizarLista]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    conectar();
+
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+      }
+    };
+  }, [conectar]);
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function Inbox() {
   const [conversaciones, setConversaciones] = useState([]);
@@ -195,10 +269,16 @@ export default function Inbox() {
   const [resumen, setResumen] = useState(null);
   const [cargandoMetricas, setCargandoMetricas] = useState(true);
   const mensajesEndRef = useRef(null);
+  const conversacionActualRef = useRef(null);
 
-  // ── Cargar métricas ───────────────────────────────────────────────────────
+  // Mantener ref sincronizada para usarla dentro de callbacks estables
   useEffect(() => {
-    const cargarMetricas = async () => {
+    conversacionActualRef.current = conversacionActual;
+  }, [conversacionActual]);
+
+  // ── Métricas ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const cargar = async () => {
       setCargandoMetricas(true);
       try {
         const [m, r] = await Promise.allSettled([
@@ -207,15 +287,14 @@ export default function Inbox() {
         ]);
         if (m.status === "fulfilled") setMetricas(m.value);
         if (r.status === "fulfilled") setResumen(r.value);
-      } catch {
-        // silencioso — las métricas son opcionales
       } finally {
         setCargandoMetricas(false);
       }
     };
-    cargarMetricas();
+    cargar();
   }, []);
 
+  // ── Lista de conversaciones ────────────────────────────────────────────────
   const cargarConversaciones = useCallback(async () => {
     setCargandoLista(true);
     try {
@@ -233,10 +312,59 @@ export default function Inbox() {
 
   useEffect(() => { cargarConversaciones(); }, [cargarConversaciones]);
 
+  // Polling liviano de la lista (para reflejar nuevas conversaciones entrantes)
+  useEffect(() => {
+    const id = setInterval(cargarConversaciones, LISTA_POLL_MS);
+    return () => clearInterval(id);
+  }, [cargarConversaciones]);
+
+  // ── Scroll al último mensaje ───────────────────────────────────────────────
   useEffect(() => {
     mensajesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
 
+  // ── Callbacks WebSocket (estables con useCallback) ─────────────────────────
+  const handleNuevoMensaje = useCallback((data) => {
+    const conv = conversacionActualRef.current;
+    if (conv && data.conversacion_id === String(conv.id)) {
+      setMensajes((prev) => {
+        const yaExiste = prev.some((m) => m.id === data.mensaje.id);
+        if (yaExiste) return prev;
+        return [...prev, data.mensaje];
+      });
+    }
+  }, []);
+
+  const handleActualizarLista = useCallback((conversacionId) => {
+    setConversaciones((prev) =>
+      prev.map((c) =>
+        String(c.id) === conversacionId
+          ? { ...c, ultima_interaccion_at: new Date().toISOString() }
+          : c
+      )
+    );
+  }, []);
+
+  // Obtener tenant_id del JWT almacenado
+  const tenantId = (() => {
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) return null;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.tenant_id ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
+  useInboxWebSocket({
+    tenantId,
+    conversacionActualId: conversacionActual?.id ? String(conversacionActual.id) : null,
+    onNuevoMensaje: handleNuevoMensaje,
+    onActualizarLista: handleActualizarLista,
+  });
+
+  // ── Seleccionar conversación ───────────────────────────────────────────────
   const seleccionarConversacion = async (conv) => {
     setConversacionActual(conv);
     setMensajes([]);
@@ -251,13 +379,18 @@ export default function Inbox() {
     }
   };
 
+  // ── Enviar mensaje ─────────────────────────────────────────────────────────
   const handleEnviar = async () => {
     const texto = mensaje.trim();
     if (!texto || !conversacionActual) return;
     setEnviando(true);
     try {
       const nuevoMensaje = await conversacionesService.responder(conversacionActual.id, texto);
-      setMensajes((prev) => [...prev, nuevoMensaje]);
+      // El WebSocket ya agrega el mensaje; solo lo añadimos si no llegó aún
+      setMensajes((prev) => {
+        const yaExiste = prev.some((m) => m.id === nuevoMensaje.id);
+        return yaExiste ? prev : [...prev, nuevoMensaje];
+      });
       setMensaje("");
       setConversaciones((prev) =>
         prev.map((c) =>
@@ -335,18 +468,12 @@ export default function Inbox() {
   return (
     <div className="flex flex-col gap-4 font-sans">
 
-      {/* ── MÉTRICAS ── */}
-      <MetricasInbox
-        metricas={metricas}
-        resumen={resumen}
-        cargando={cargandoMetricas}
-      />
+      <MetricasInbox metricas={metricas} resumen={resumen} cargando={cargandoMetricas} />
 
-      {/* ── LAYOUT PRINCIPAL ── */}
       <div className="flex flex-col lg:flex-row h-[calc(100vh-220px)] bg-slate-50 rounded-2xl overflow-hidden shadow-sm ring-1 ring-slate-200">
 
-        {/* Lista de conversaciones */}
-        <div className={`${conversacionActual ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 shrink-0 bg-white border-r border-slate-100 flex-col`}>
+        {/* Lista */}
+        <div className={`${conversacionActual ? "hidden lg:flex" : "flex"} w-full lg:w-80 shrink-0 bg-white border-r border-slate-100 flex-col`}>
 
           <div className="px-4 py-4 border-b border-slate-100">
             <div className="flex items-center justify-between mb-3">
@@ -413,6 +540,7 @@ export default function Inbox() {
                 const ultimoMensaje = conv.mensajes?.[conv.mensajes.length - 1];
                 const badgeModo = getBadgeModo(conv.modo_atencion);
                 const esCerrada = conv.estado === "Cerrada";
+                const nombre = nombreMostrable(conv);
 
                 return (
                   <button
@@ -427,12 +555,10 @@ export default function Inbox() {
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                           esActiva ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"
                         }`}>
-                          {(conv.cliente?.nombre_completo ?? "?").charAt(0).toUpperCase()}
+                          {nombre.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {conv.cliente?.nombre_completo ?? conv.cliente?.telefono ?? "Desconocido"}
-                          </p>
+                          <p className="text-sm font-semibold text-slate-900 truncate">{nombre}</p>
                           <p className="text-xs text-slate-400 truncate mt-0.5">
                             {ultimoMensaje?.contenido ?? "Sin mensajes"}
                           </p>
@@ -466,7 +592,6 @@ export default function Inbox() {
         ) : (
           <div className="flex flex-1 flex-col min-w-0">
 
-            {/* Botón volver móvil */}
             <div className="lg:hidden px-4 py-2 bg-white border-b border-slate-100">
               <button
                 onClick={() => setConversacionActual(null)}
@@ -476,15 +601,14 @@ export default function Inbox() {
               </button>
             </div>
 
-            {/* Header del chat */}
             <div className="px-4 sm:px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                  {(conversacionActual.cliente?.nombre_completo ?? "?").charAt(0).toUpperCase()}
+                  {nombreMostrable(conversacionActual).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 truncate">
-                    {conversacionActual.cliente?.nombre_completo ?? "Sin nombre"}
+                    {nombreMostrable(conversacionActual)}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -506,7 +630,6 @@ export default function Inbox() {
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* Asignar agente */}
                 <button
                   onClick={() => setMostrarAsignar(true)}
                   className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 rounded-lg hover:bg-slate-200 transition-colors"
@@ -649,7 +772,6 @@ export default function Inbox() {
         )}
       </div>
 
-      {/* Modal asignar */}
       {mostrarAsignar && conversacionActual && (
         <ModalAsignar
           conversacionId={conversacionActual.id}

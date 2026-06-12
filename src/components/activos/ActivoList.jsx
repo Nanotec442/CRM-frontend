@@ -9,7 +9,7 @@ const getEstadoStyle = (estado) => {
   return "bg-rose-50 text-rose-700 border-rose-100";
 };
 
-const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
+const ActivoList = ({ activos, onVerDetalle, onEliminar, onActivar }) => {
   const [cambiandoEstado, setCambiandoEstado] = useState(null);
 
   if (!activos.length) {
@@ -111,10 +111,10 @@ const ActivoList = ({ activos, onEditar, onEliminar, onActivar }) => {
             {/* Acciones */}
             <div className="flex items-center gap-2 pt-4 border-t border-slate-50 relative">
               <button
-                onClick={() => onEditar(a)}
-                className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white transition-all active:scale-95"
+                onClick={() => onVerDetalle(a)}
+                className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
               >
-                Editar
+                Ver detalle
               </button>
 
               <div className="flex-1 relative">

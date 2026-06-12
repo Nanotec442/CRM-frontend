@@ -1,54 +1,15 @@
 import { useEffect, useState } from "react";
-import { Loader2, Trash2, Star, Wifi } from "lucide-react";
+import { Loader2, Trash2, Star, Wifi, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
 import whatsappService from "../../services/whatsappService";
-
-const META_APP_ID = import.meta.env.VITE_META_APP_ID;
-const META_CONFIG_ID = import.meta.env.VITE_META_CONFIG_ID;
-
-function cargarFacebookSDK(appId) {
-  if (document.getElementById("facebook-jssdk")) return;
-
-  window.fbAsyncInit = function () {
-    window.FB.init({
-      appId,
-      cookie: true,
-      xfbml: false,
-      version: "v22.0",
-    });
-  };
-
-  const js = document.createElement("script");
-  js.id = "facebook-jssdk";
-  js.src = "https://connect.facebook.net/en_US/sdk.js";
-  js.async = true;
-  js.defer = true;
-  document.body.appendChild(js);
-}
 
 export default function WhatsAppConfig() {
   const [conexiones, setConexiones] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [conectando, setConectando] = useState(false);
-  const [sdkListo, setSdkListo] = useState(false);
+  const [vinculando, setVinculando] = useState(false);
+  const [qrData, setQrData] = useState(null);
+  const [cargandoQR, setCargandoQR] = useState(false);
 
-  // Cargar SDK de Facebook al montar
-  useEffect(() => {
-    if (!META_APP_ID) return;
-
-    cargarFacebookSDK(META_APP_ID);
-
-    const intervalo = setInterval(() => {
-      if (window.FB) {
-        setSdkListo(true);
-        clearInterval(intervalo);
-      }
-    }, 300);
-
-    return () => clearInterval(intervalo);
-  }, []);
-
-  // Cargar conexiones existentes al montar
   useEffect(() => {
     cargarConexiones();
   }, []);
@@ -68,60 +29,38 @@ export default function WhatsAppConfig() {
     }
   };
 
-  // Función async separada para intercambiar el code con el backend
-  const intercambiarCodigo = async (code) => {
+  // Paso 1: crear la instancia en Evolution y guardarlo en BD
+  const vincularWhatsApp = async () => {
+    setVinculando(true);
+    setQrData(null);
     try {
-      const data = await whatsappService.exchangeCode(code);
-      const numero =
-        data?.integration?.display_phone_number ||
-        data?.integration?.phone_number_id;
-      toast.success(`¡WhatsApp conectado! Número: ${numero}`);
-      await cargarConexiones();
+      await whatsappService.vincular();
+      toast.success("Instancia creada. Ahora genera el código QR para escanear.");
     } catch (err) {
-      toast.error(
-        err?.response?.data?.detail || "Error al conectar WhatsApp."
-      );
+      toast.error(err?.response?.data?.detail || "Error al iniciar la vinculación.");
     } finally {
-      setConectando(false);
+      setVinculando(false);
     }
   };
 
-  const conectarWhatsApp = () => {
-    if (!window.FB) {
-      toast.error("El SDK de Facebook aún no está listo. Espera un momento.");
-      return;
-    }
-
-    if (!META_CONFIG_ID) {
-      toast.error("Falta VITE_META_CONFIG_ID en las variables de entorno.");
-      return;
-    }
-
-    setConectando(true);
-
-    // IMPORTANTE: el callback de FB.login NO puede ser async
-    // El código async va en una función separada (intercambiarCodigo)
-    window.FB.login(
-      (response) => {
-        if (!response?.authResponse?.code) {
-          toast.error("No se recibió código de autorización desde Meta.");
-          setConectando(false);
-          return;
-        }
-
-        intercambiarCodigo(response.authResponse.code);
-      },
-      {
-        config_id: META_CONFIG_ID,
-        response_type: "code",
-        override_default_response_type: true,
-        extras: {
-          setup: {},
-          feature: "whatsapp_embedded_signup",
-          sessionInfoVersion: "3",
-        },
+  // Paso 2: pedir el QR a Evolution (puede llamarse varias veces si expira)
+  const generarQR = async () => {
+    setCargandoQR(true);
+    setQrData(null);
+    try {
+      const data = await whatsappService.obtenerQR();
+      // Evolution devuelve el base64 con el prefijo "data:image/png;base64," incluido
+      const src = data?.base64 ?? null;
+      if (src) {
+        setQrData(src);
+      } else {
+        toast.warning("Evolution no devolvió un QR. Intenta de nuevo en unos segundos.");
       }
-    );
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Error al obtener el QR.");
+    } finally {
+      setCargandoQR(false);
+    }
   };
 
   const marcarPrincipal = async (integrationId) => {
@@ -135,16 +74,12 @@ export default function WhatsAppConfig() {
   };
 
   const desconectar = async (integrationId, numero) => {
-    if (
-      !window.confirm(
-        `¿Desconectar el número ${numero}? Esta acción no se puede deshacer.`
-      )
-    )
+    if (!window.confirm(`¿Desconectar el número ${numero}? Esta acción no se puede deshacer.`))
       return;
-
     try {
       await whatsappService.desconectar(integrationId);
       toast.success("Número desconectado.");
+      setQrData(null);
       await cargarConexiones();
     } catch {
       toast.error("No se pudo desconectar el número.");
@@ -164,69 +99,111 @@ export default function WhatsAppConfig() {
     }
   };
 
+  // Si ya existe al menos una cuenta activa, no mostrar el panel de vinculación
+  const yaVinculado = conexiones.some((c) => c.estado === "ACTIVA");
+
   return (
     <div className="p-6 space-y-8">
 
       {/* Header */}
       <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
         <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl">
-          ✅
+          📱
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-900">
-            Conectar a WhatsApp
-          </h2>
+          <h2 className="text-xl font-bold text-slate-900">Conectar a WhatsApp</h2>
           <p className="text-sm text-slate-500 mt-0.5">
-            Vincula tu número de WhatsApp Business para recibir y responder
-            mensajes desde PIVOT.
+            Vincula tu número de WhatsApp Business para recibir y responder mensajes desde PIVOT.
           </p>
         </div>
       </div>
 
-      {/* Aviso HTTPS en desarrollo */}
-      {window.location.protocol === "http:" && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-          <p className="font-bold mb-1">⚠ Requiere HTTPS</p>
-          <p>
-            Meta bloquea el login desde páginas HTTP. Para probar en desarrollo
-            usa{" "}
-            <code className="bg-amber-100 px-1 rounded font-mono">
-              ngrok http 5173
-            </code>{" "}
-            y abre la URL HTTPS que te genera.
-          </p>
+      {/* Panel de vinculación — solo si no hay cuenta activa */}
+      {!yaVinculado && (
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 space-y-6">
+
+          {/* Paso 1 */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Paso 1</p>
+              <h3 className="text-base font-bold text-green-900">Crear instancia</h3>
+              <p className="text-sm text-green-700 mt-1">
+                Registra tu empresa en el servidor de WhatsApp. Solo se necesita hacer una vez.
+              </p>
+            </div>
+            <button
+              onClick={vincularWhatsApp}
+              disabled={vinculando}
+              className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-green-700 transition-colors disabled:opacity-60 shrink-0"
+            >
+              {vinculando ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                "Crear instancia"
+              )}
+            </button>
+          </div>
+
+          <hr className="border-green-200" />
+
+          {/* Paso 2 */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Paso 2</p>
+              <h3 className="text-base font-bold text-green-900">Escanear código QR</h3>
+              <p className="text-sm text-green-700 mt-1">
+                Genera el QR y escanéalo desde WhatsApp → Dispositivos vinculados → Vincular dispositivo.
+              </p>
+            </div>
+            <button
+              onClick={generarQR}
+              disabled={cargandoQR}
+              className="inline-flex items-center gap-2 bg-white border border-green-400 text-green-800 px-6 py-3 rounded-xl font-semibold text-sm hover:bg-green-100 transition-colors disabled:opacity-60 shrink-0"
+            >
+              {cargandoQR ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  Generar QR
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Imagen QR */}
+          {qrData && (
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <div className="bg-white p-4 rounded-2xl border border-green-200 shadow-sm">
+                <img
+                  src={qrData}
+                  alt="Código QR de WhatsApp"
+                  className="w-52 h-52"
+                />
+              </div>
+              <p className="text-xs text-green-700 font-medium text-center">
+                El QR expira en ~60 segundos. Si vence, haz clic en "Generar QR" nuevamente.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Botón de conexión */}
-      <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-base font-bold text-green-900">
-            Agregar número de WhatsApp
-          </h3>
-          <p className="text-sm text-green-700 mt-1">
-            Usa tu cuenta de Meta Business para vincular un número de WhatsApp
-            Business.
+      {/* Aviso si ya está vinculado */}
+      {yaVinculado && (
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-sm text-green-800">
+          <p className="font-semibold">WhatsApp ya está vinculado.</p>
+          <p className="mt-0.5 text-green-700">
+            Para cambiar de número, desconecta el actual y vuelve a vincular.
           </p>
         </div>
-        <button
-          onClick={conectarWhatsApp}
-          disabled={!sdkListo || conectando}
-          className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-green-700 transition-colors disabled:opacity-60 shrink-0"
-        >
-          {conectando ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Conectando...
-            </>
-          ) : (
-            <>
-              <span>📱</span>
-              Conectar WhatsApp
-            </>
-          )}
-        </button>
-      </div>
+      )}
 
       {/* Lista de conexiones */}
       <div>
@@ -241,11 +218,9 @@ export default function WhatsAppConfig() {
         ) : conexiones.length === 0 ? (
           <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-200">
             <p className="text-4xl mb-3">📵</p>
-            <p className="text-sm font-semibold text-slate-600">
-              No hay números conectados aún.
-            </p>
+            <p className="text-sm font-semibold text-slate-600">No hay números conectados aún.</p>
             <p className="text-xs text-slate-400 mt-1">
-              Haz clic en "Conectar WhatsApp" para vincular tu número.
+              Sigue los pasos de arriba para vincular tu número.
             </p>
           </div>
         ) : (
@@ -259,7 +234,6 @@ export default function WhatsAppConfig() {
                     : "bg-white border-slate-200"
                 }`}
               >
-                {/* Info del número */}
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 ${
@@ -273,7 +247,7 @@ export default function WhatsAppConfig() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-bold text-slate-900">
-                        {c.display_phone_number || c.phone_number_id}
+                        {c.display_phone_number || c.phone_number_id || c.external_account_id}
                       </p>
                       {c.es_principal && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-[10px] font-bold rounded-full">
@@ -282,12 +256,11 @@ export default function WhatsAppConfig() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {c.verified_name ?? "Sin nombre verificado"} · {c.estado}
+                      {c.verified_name ?? c.provider ?? "Sin nombre verificado"} · {c.estado}
                     </p>
                   </div>
                 </div>
 
-                {/* Acciones */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => probarConexion(c.id)}
@@ -311,7 +284,7 @@ export default function WhatsAppConfig() {
                     onClick={() =>
                       desconectar(
                         c.id,
-                        c.display_phone_number || c.phone_number_id
+                        c.display_phone_number || c.phone_number_id || c.external_account_id
                       )
                     }
                     title="Desconectar número"
@@ -326,16 +299,11 @@ export default function WhatsAppConfig() {
         )}
       </div>
 
-      {/* Info adicional */}
+      {/* Info */}
       <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-500 space-y-1">
         <p>
-          <span className="font-semibold text-slate-700">¿Cómo funciona?</span>{" "}
-          Al hacer clic en "Conectar WhatsApp" se abrirá una ventana de Meta
-          para autorizar tu cuenta de WhatsApp Business.
-        </p>
-        <p>
-          El número principal es el que el bot usará para responder mensajes
-          entrantes automáticamente.
+          <span className="font-semibold text-slate-700">¿Cómo funciona?</span>
+          {" Primero crea la instancia (Paso 1), luego genera el QR (Paso 2) y escanéalo desde tu teléfono. Una vez conectado, el bot responderá mensajes entrantes automáticamente."}
         </p>
       </div>
     </div>

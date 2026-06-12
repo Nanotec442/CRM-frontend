@@ -29,10 +29,11 @@ const GRUPOS_PERMISOS = [
   {
     grupo: "Activos",
     permisos: [
-      { id: "leer_activos",    label: "Ver Activos" },
-      { id: "crear_activos",   label: "Crear Activos" },
-      { id: "editar_activos",  label: "Editar Activos" },
-      { id: "borrar_activos",  label: "Desactivar Activos" },
+      { id: "leer_activos",       label: "Ver Activos" },
+      { id: "crear_activos",      label: "Crear Activos" },
+      { id: "editar_activos",     label: "Editar Activos" },
+      { id: "borrar_activos",     label: "Desactivar Activos" },
+      { id: "administrar_activos", label: "Administrar Tipos de Recurso" },
     ],
   },
   {

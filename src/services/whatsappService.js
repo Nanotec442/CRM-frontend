@@ -1,6 +1,7 @@
 import api from "./api";
 
 const whatsappService = {
+  // ── Meta ──────────────────────────────────────────────
   async listarConexiones() {
     const res = await api.get("/crm/whatsapp/connections");
     return Array.isArray(res.data) ? res.data : [];
@@ -30,6 +31,17 @@ const whatsappService = {
 
   async probarConexion(integrationId) {
     const res = await api.get(`/crm/whatsapp/connections/${integrationId}/test`);
+    return res.data;
+  },
+
+  // ── Evolution ─────────────────────────────────────────
+  async vincular() {
+    const res = await api.post("/whatsapp/vincular");
+    return res.data;
+  },
+
+  async obtenerQR() {
+    const res = await api.get("/whatsapp/qr");
     return res.data;
   },
 };

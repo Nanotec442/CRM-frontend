@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { useActivo } from "../../hooks/useActivo";
+import activosService from "../../services/activosService";
 import ActivoForm from "../../components/activos/ActivoForm";
 import ActivoList from "../../components/activos/ActivoList";
+import ActivoDetalle from "../../components/activos/ActivoDetalle";
 import NuevoActivoVista from "../../components/activos/NuevoActivoVista";
 
 const Activos = () => {
@@ -13,11 +16,13 @@ const Activos = () => {
     editarActivo,
     eliminarActivo,
     activarActivo,
+    fetchResourceTypes,
   } = useActivo();
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
-  const [vista, setVista] = useState("lista");
+  const [vista, setVista] = useState("lista"); // "lista" | "nuevo" | "detalle"
+  const [activoSeleccionado, setActivoSeleccionado] = useState(null);
 
   const activosFiltrados = activos.filter((a) => {
     const q = busqueda.toLowerCase();
@@ -32,6 +37,33 @@ const Activos = () => {
     return matchQ && matchTipo;
   });
 
+  const handleVerDetalle = async (activo) => {
+    // Recargar el activo completo para tener reglas y disponibilidades actualizadas
+    try {
+      const activoCompleto = await activosService.getActivo(activo.id);
+      setActivoSeleccionado(activoCompleto);
+    } catch {
+      setActivoSeleccionado(activo);
+    }
+    setVista("detalle");
+  };
+
+  const handleRefreshDetalle = async () => {
+    if (!activoSeleccionado) return;
+    try {
+      const actualizado = await activosService.getActivo(activoSeleccionado.id);
+      setActivoSeleccionado(actualizado);
+    } catch {
+      toast.error("No se pudo recargar el activo.");
+    }
+  };
+
+  const handleGuardarDetalle = async (id, data) => {
+    await editarActivo(id, data);
+    // Actualizar el activo seleccionado con los nuevos datos
+    setActivoSeleccionado(prev => ({ ...prev, ...data }));
+  };
+
   const handleGuardarDesdeIA = async (formData) => {
     await crearActivo(formData);
     setVista("lista");
@@ -42,27 +74,27 @@ const Activos = () => {
   return (
     <div className="space-y-8 font-sans">
 
-      {/* Header */}
-      <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Activos y Recursos</h1>
-          <p className="mt-2 text-slate-600">
-            Motor de recursos genérico — administra cualquier cosa operable.
-            <span className="font-semibold text-slate-900 ml-1">{activos.length}</span> activos registrados.
-          </p>
-        </div>
-        {vista === "lista" && (
+      {/* Header — solo en lista */}
+      {vista === "lista" && (
+        <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Activos y Recursos</h1>
+            <p className="mt-2 text-slate-600">
+              Motor de recursos genérico — administra cualquier cosa operable.
+              <span className="font-semibold text-slate-900 ml-1">{activos.length}</span> activos registrados.
+            </p>
+          </div>
           <button
             onClick={() => setVista("nuevo")}
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors shadow-sm"
           >
             + Nuevo recurso con IA
           </button>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Vista condicional */}
-      {vista === "nuevo" ? (
+      {/* Vista: Nuevo con IA */}
+      {vista === "nuevo" && (
         <div className="animate-in fade-in duration-300">
           <NuevoActivoVista
             onGuardar={handleGuardarDesdeIA}
@@ -70,14 +102,37 @@ const Activos = () => {
             resourceTypes={resourceTypes}
           />
         </div>
-      ) : (
+      )}
+
+      {/* Vista: Detalle del activo */}
+      {vista === "detalle" && activoSeleccionado && (
+        <div className="animate-in fade-in duration-300">
+          <ActivoDetalle
+            activo={activoSeleccionado}
+            resourceTypes={resourceTypes}
+            onVolver={() => { setVista("lista"); setActivoSeleccionado(null); }}
+            onGuardar={handleGuardarDetalle}
+            onRefresh={handleRefreshDetalle}
+          />
+        </div>
+      )}
+
+      {/* Vista: Lista */}
+      {vista === "lista" && (
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-[400px_1fr] animate-in fade-in duration-300">
 
           {/* Sidebar — formulario manual */}
           <aside>
             <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 h-fit">
               <h2 className="font-semibold text-slate-900 mb-4">Registro Manual</h2>
-              <ActivoForm onSubmit={crearActivo} resourceTypes={resourceTypes} />
+              <ActivoForm
+                onSubmit={crearActivo}
+                resourceTypes={resourceTypes}
+                onResourceTypesChange={(updater) => {
+                  // Recargar resource types después de crear/editar/eliminar
+                  fetchResourceTypes();
+                }}
+              />
             </div>
           </aside>
 
@@ -115,7 +170,7 @@ const Activos = () => {
                 <div className="p-1">
                   <ActivoList
                     activos={activosFiltrados}
-                    onEditar={editarActivo}
+                    onVerDetalle={handleVerDetalle}
                     onEliminar={eliminarActivo}
                     onActivar={activarActivo}
                   />

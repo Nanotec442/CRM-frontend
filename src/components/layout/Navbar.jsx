@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logoPivot from "../../assets/pivot.png";
+import logoPivot from "../../assets/imgPivot.png";
 
 function Navbar() {
   return (
@@ -23,7 +23,7 @@ function Navbar() {
               src={logoPivot}
               alt="Pivot 360"
               className="
-                h-22 w-auto object-contain
+                h-24 w-auto object-contain
                 transition-transform duration-300
                 group-hover:scale-[1.02]
               "

@@ -38,4 +38,36 @@ const activosService = {
   },
 };
 
+// ── Resource Rules (/activos/{id}/reglas) ──────────────────────────────────
+export const reglasService = {
+  async listar(activoId) {
+    const res = await api.get(`/activos/${activoId}/reglas`);
+    return Array.isArray(res.data) ? res.data : [];
+  },
+  async crear(activoId, payload) {
+    const res = await api.post(`/activos/${activoId}/reglas`, payload);
+    return res.data;
+  },
+  async eliminar(activoId, reglaId) {
+    const res = await api.delete(`/activos/${activoId}/reglas/${reglaId}`);
+    return res.data;
+  },
+};
+
+// ── Resource Availability (/activos/{id}/disponibilidad) ───────────────────
+export const disponibilidadService = {
+  async listar(activoId) {
+    const res = await api.get(`/activos/${activoId}/disponibilidad`);
+    return Array.isArray(res.data) ? res.data : [];
+  },
+  async crear(activoId, payload) {
+    const res = await api.post(`/activos/${activoId}/disponibilidad`, payload);
+    return res.data;
+  },
+  async eliminar(activoId, dispId) {
+    const res = await api.delete(`/activos/${activoId}/disponibilidad/${dispId}`);
+    return res.data;
+  },
+};
+
 export default activosService;
