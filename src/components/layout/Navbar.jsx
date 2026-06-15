@@ -49,6 +49,7 @@ function Navbar() {
               Inicio
             </Link>
 
+            {/*
             <Link
               to="/login"
               className="
@@ -63,7 +64,9 @@ function Navbar() {
             >
               Iniciar sesión
             </Link>
+            */}
 
+            {/*
             <Link
               to="/register"
               className="
@@ -82,7 +85,7 @@ function Navbar() {
             >
               Empezar
             </Link>
-
+            */}
           </nav>
         </div>
       </div>
